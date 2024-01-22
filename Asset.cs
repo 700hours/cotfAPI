@@ -7,17 +7,16 @@ using System.Text;
 using System.Threading.Tasks;
 using cotf.Base;
 using cotf.World;
-using cotf.World.Traps;
 
 namespace cotf.Assets
 {
     public sealed class Asset<T> where T : Image
     {
         public static bool init;
-        public static void Initialize(int num = 2, int num2 = 1, int num3 = 1, int num4 = 1, int num5 = 1, int num6 = 1, int num7 = 1)
+        public static void Initialize(int num, int num2)
         {
-            _Background.Init(_Background.Length = num2);
-            
+            _Background<T>.Init(_Background<T>.Length = num);
+            _Tile<T>.Init(_Tile<T>.Length = num2);
         }
         public static T Request(string name)
         {
@@ -31,16 +30,17 @@ namespace cotf.Assets
         {
             if (!init)
             {
-                Initialize()
+                Initialize(1, 1);
+                init = true;
             }
             switch (type.Name)
             {
                 case nameof(Background):
-                    return _Background.Texture[style];
+                    return _Background<T>.Texture[style];
                 case nameof(Tile):
-                    return _
+                    return _Tile<T>.Texture[style];
                 default:
-                    return (T)Main.pixel;
+                    return null;
             }
         }
         static class _Background<T> where T : Image
@@ -56,7 +56,27 @@ namespace cotf.Assets
                     {
                         using (Graphics g = Graphics.FromImage(bmp))
                         { 
-                            g.FillRectangle(Brushes.White, new Rectangle(0, 0, World.Tile.Size, World.Tile.Size));
+                            g.FillRectangle(Brushes.White, new Rectangle(0, 0, 10, 10));
+                            Texture[i] = (T)(Image)bmp;
+                        }
+                    }
+                }
+            }
+        }
+        static class _Tile<T> where T : Image
+        {
+            internal static int Length;
+            internal static T[] Texture = new T[Length];
+            internal static void Init(int length)
+            {
+                Texture = new T[length];
+                for (int i = 0; i < length; i++)
+                {
+                    using (Bitmap bmp = new Bitmap(10, 10))
+                    {
+                        using (Graphics g = Graphics.FromImage(bmp))
+                        {
+                            g.FillRectangle(Brushes.White, new Rectangle(0, 0, 10, 10));
                             Texture[i] = (T)(Image)bmp;
                         }
                     }

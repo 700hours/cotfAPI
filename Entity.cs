@@ -9,11 +9,12 @@ namespace cotf
 {
     public class Entity
     {
-        public bool staticLamp;
         public bool lit;
         public bool onScreen;
         public bool preRendered;
         public bool active;
+        public bool inShadow;
+        public int whoAmI;
         public int Width
         {
             get { return size.Width; }
@@ -36,8 +37,8 @@ namespace cotf
         }
         public float range;
         public float alpha;
+        public float gamma;
         public string? name;
-        public virtual string Texture => "";
         public Color color;
         public Vector2 position;
         public Vector2 Center
@@ -49,5 +50,23 @@ namespace cotf
         public Margin margin;
         public SizeF scale;
         private Size size;
+        public virtual string Texture => "";
+        public virtual Color DefaultColor => Color.Gray;
+        public virtual bool PreUpdate() => true;
+        public virtual void Update() { }
+        public virtual bool PreDraw(Graphics graphics) => true;
+        public virtual void Draw(Graphics graphics) { }
+        public virtual void PostDraw(Graphics graphics) { }
+        public virtual void PostFX() { }
+    }
+    sealed class OutOfBoundsException : Exception
+    {
+        int i, j;
+        public OutOfBoundsException(int i, int j)
+        {
+            this.i = i;
+            this.j = j;
+        }
+        public override string Message => $"Attempting to access an index of i:{i}, j:{j} outside the array.";
     }
 }

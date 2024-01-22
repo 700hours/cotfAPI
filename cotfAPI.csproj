@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="lib\**" />
+    <EmbeddedResource Remove="lib\**" />
+    <None Remove="lib\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="System.Drawing.Common">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\tModLoader\Libraries\system.drawing.common\6.0.0\lib\net6.0\System.Drawing.Common.dll</HintPath>
     </Reference>

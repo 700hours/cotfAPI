@@ -6,16 +6,14 @@ using System.Drawing.Imaging;
 using System.IO;
 using cotf.Assets;
 using cotf.Base;
-using cotf.World;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Linq;
-using Microsoft.Xna.Framework;
 using Rectangle = System.Drawing.Rectangle;
 using Color = System.Drawing.Color;
 using Point = System.Drawing.Point;
 using Matrix = System.Drawing.Drawing2D.Matrix;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
+using System.Numerics;
 
 namespace cotf.Base
 {
@@ -162,44 +160,12 @@ namespace cotf.Base
                 (int)Math.Min(color.G + newColor.G * distance, 255),
                 (int)Math.Min(color.B + newColor.B * distance, 255));
         }
-        public static Color FlatAdditive(this Color color, Color newColor, float distance)
-        {
-            return Color.FromArgb(
-                color.A,
-                (int)Math.Max(Math.Min(color.R + Math.Abs(newColor.R - 255f) * distance, 255), 0),
-                (int)Math.Max(Math.Min(color.G + Math.Abs(newColor.G - 255f) * distance, 255), 0),
-                (int)Math.Max(Math.Min(color.B + Math.Abs(newColor.B - 255f) * distance, 255), 0));
-        }
-        public static Color Divide(this Color one, Color two)
-        {
-            int a = 255;
-            int r = (int)Math.Min(Math.Max(one.R, 1f) / ((two.R / 255f) + 1), 255);
-            int g = (int)Math.Min(Math.Max(one.G, 1f) / ((two.G / 255f) + 1), 255);
-            int b = (int)Math.Min(Math.Max(one.B, 1f) / ((two.B / 255f) + 1), 255);
-            return Color.FromArgb(a, r, g, b);
-        }
-        public static Color Multiply(this Color one, Color two)
-        {
-            int a = 255;
-            int r = (int)Math.Min(Math.Max(one.R, 1f) * ((two.R / 255f) + 1), 255);
-            int g = (int)Math.Min(Math.Max(one.G, 1f) * ((two.G / 255f) + 1), 255);
-            int b = (int)Math.Min(Math.Max(one.B, 1f) * ((two.B / 255f) + 1), 255); 
-            return Color.FromArgb(a, r, g, b);
-        }
         public static Color Multiply(this Color one, Color two, float alpha)
         {
             int a = (int)Math.Max(Math.Min(255f * Math.Min(alpha, 1f), 255), 1f);
             int r = (int)Math.Min(Math.Max(one.R, 1f) * ((two.R / 255f) + 1), 255);
             int g = (int)Math.Min(Math.Max(one.G, 1f) * ((two.G / 255f) + 1), 255);
             int b = (int)Math.Min(Math.Max(one.B, 1f) * ((two.B / 255f) + 1), 255);
-            return Color.FromArgb(a, r, g, b);
-        }
-        public static Color MultiplyV2(this Color one, Color two, float range)
-        {
-            int a = (int)Math.Max(Math.Min(255f * Math.Min(range, 1f), 255), 1f);
-            int r = (int)Math.Min(Math.Max(one.R, 1f) * Math.Max((two.R / 255f + 1f) * range, 1f), 255);
-            int g = (int)Math.Min(Math.Max(one.G, 1f) * Math.Max((two.G / 255f + 1f) * range, 1f), 255);
-            int b = (int)Math.Min(Math.Max(one.B, 1f) * Math.Max((two.B / 255f + 1f) * range, 1f), 255);
             return Color.FromArgb(a, r, g, b);
         }
         public static Color NonAlpha(this Color color)
@@ -230,13 +196,6 @@ namespace cotf.Base
             bw.Write(color.G);
             bw.Write(color.B);
         }
-        public static void Write(this BinaryWriter bw, Purse purse)
-        {
-            bw.Write(purse.Content.copper);
-            bw.Write(purse.Content.silver);
-            bw.Write(purse.Content.gold);
-            bw.Write(purse.Content.platinum);
-        }
         public static Vector2 ReadVector2(this BinaryReader br)
         {
             Vector2 v2 = Vector2.Zero;
@@ -251,19 +210,6 @@ namespace cotf.Base
             byte g = br.ReadByte();
             byte b = br.ReadByte();
             return Color.FromArgb(a, r, g, b);
-        }
-        public static Purse ReadPurse(this BinaryReader br)
-        {
-            uint c = br.ReadUInt32();
-            int s = br.ReadInt32();
-            int g = br.ReadInt32();
-            int p = br.ReadInt32();
-            Purse purse = new Purse(0);
-            purse.Content.copper = c;
-            purse.Content.silver = s;
-            purse.Content.gold = g;
-            purse.Content.platinum = p;
-            return purse;
         }
     }
     public static class Helper
@@ -343,157 +289,30 @@ namespace cotf.Base
             }
             return result;
         }
-    }
-    public sealed class EntityHelper
-    {
-        public static List<CollisionType> Collision(WorldObject one, Entity two, int buffer = 4)
+        public static float RangeNormal(float value, float range = 100f)
         {
-            List<CollisionType> list = new List<CollisionType>();
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X, (int)two.position.Y, two.width, two.height)))
-                list.Add(CollisionType.Unbuffered);
-            //  Directions
-            //  Collision detection is reversed with WorldObject types
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X, (int)two.position.Y - buffer, two.width, 2)))
-                list.Add(CollisionType.Bottom);
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X, (int)two.position.Y + two.height + buffer, two.width, 2)))
-                list.Add(CollisionType.Top);
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X + two.width + buffer, (int)two.position.Y, 2, two.height)))
-                list.Add(CollisionType.Left);
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X - buffer, (int)two.position.Y, 2, two.height)))
-                list.Add(CollisionType.Right);
-
-            return list;
+            return Math.Max((value * -1f + range) / range, 0);
         }
-        public static List<CollisionType> Collision(WorldObject one, Tile two, int buffer = 4)
+        public static float RangeNormal(Vector2 to, Vector2 from, float range = 100f)
         {
-            List<CollisionType> list = new List<CollisionType>();
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X, (int)two.position.Y, two.width, two.height)))
-                list.Add(CollisionType.Unbuffered);
-            //  Directions
-            //  Collision detection is reversed with WorldObject types
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X, (int)two.position.Y - buffer, two.width, 2)))
-                list.Add(CollisionType.Bottom);
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X, (int)two.position.Y + two.height + buffer, two.width, 2)))
-                list.Add(CollisionType.Top);
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X + two.width + buffer, (int)two.position.Y, 2, two.height)))
-                list.Add(CollisionType.Left);
-            if (one.hitbox.IntersectsWith(new Rectangle((int)two.position.X - buffer, (int)two.position.Y, 2, two.height)))
-                list.Add(CollisionType.Right);
-
-            return list;
+            return Math.Max(((float)Helper.Distance(from, to) * -1f + range) / range, 0);
         }
-        public static Room GetRoom(Func<Room, bool> func)
-        { 
-            foreach (Room room in Main.room.Values)
+        public static bool SightLine(Vector2 from, Entity target, Size size, int step)
+        {
+            for (int n = 0; n < Helper.Distance(from, target.Center); n += step)
             {
-                if (func.Invoke(room))
+                var v2 = from + Helper.AngleToSpeed(Helper.AngleTo(from, target.Center), n);
+                if (Lib.tile[(int)v2.X / size.Width, (int)v2.Y / size.Height].active)
                 {
-                    return room;
+                    return false;
                 }
             }
-            return default;
+            return true;
         }
-        public static Room[] RoomWhile(Func<Room, bool> func)
-        {
-            List<Room> list = new List<Room>();
-            foreach (Room room in Main.room.Values)
-            {
-                if (func.Invoke(room))
-                {
-                    list.Add(room);
-                }
-            }
-            return list.ToArray();
-        }
-        public static Background[] GetRoomTile(Func<Room, bool> func)
-        {
-            var list = new List<Background>();
-            foreach (Room room in Main.room.Values)
-            {
-                if (func.Invoke(room))
-                {
-                    for (int i = room.bounds.Left; i < room.bounds.Left + room.bounds.Width; i += Tile.Size / 2)
-                    {
-                        for (int j = room.bounds.Top; j < room.bounds.Top + room.bounds.Height; j += Tile.Size / 2)
-                        {
-                            Background bg = Background.GetSafely(i / Tile.Size, j / Tile.Size);
-                            if (bg != null && bg.active)
-                            {
-                                list.Add(bg);
-                            }
-                        }
-                    }
-                }
-            }
-            return list.ToArray();
-        }
-    }
-    public enum CollisionType
-    {
-        None,
-        Top,
-        Right,
-        Bottom,
-        Left,
-        Unbuffered
     }
     
     public static class Drawing
     {
-        #region Second light pass
-        public static Bitmap Lightpass1(float progress, Surface start, Surface[] src, Tile parent)
-        {
-            try
-            { 
-                if (start.bitmap == null)
-                    return default(Bitmap);
-                Bitmap layer0 = (Bitmap)start.bitmap.Clone();
-                Bitmap layer1 = pass1(layer0, start, src, new Point(1, 1));
-                return layer1;
-            }
-            catch
-            {
-                return default(Bitmap);
-            }
-        }
-        private static Bitmap pass1(Bitmap layer0, Surface start, Surface[] src, Point buffer = default)
-        {
-            //Bitmap layer1 = new Bitmap(start.width, start.height);
-            for (int i = 0; i < start.width; i++)
-            {
-                for (int j = 0; j < start.height; j++)
-                {
-                    if (i >= start.width || j >= start.height)
-                        continue;
-                    for (int n = 0; n < src.Length; n++)
-                    { 
-                        Bitmap clone = (Bitmap)src[n].bitmap.Clone();
-                        for (int k = 0; k < src[n].width; k++)
-                        {
-                            for (int l = 0; l < src[n].height; l++)
-                            {
-                                if (k >= src[n].width - buffer.X || l >= src[n].height - buffer.Y)
-                                    continue;
-                                float distance = (float)Helper.Distance(start.topLeft + new Vector2(i, j), src[n].topLeft + new Vector2(k, l));
-                                float radius = Helper.NormalizedRadius(distance, src[n].range);
-                                if (radius > 0f)
-                                {
-                                    Color pixel0 = layer0.GetPixel(i, j);
-                                    //Color pixel1 = layer1.GetPixel(i, j);
-                                    Color srcPixel = clone.GetPixel(k, l);
-                                    layer0.SetPixel(i, j, Ext.Multiply(pixel0, srcPixel, radius));
-                                    //layer0.SetPixel(i, j, Ext.Multiply(pixel1, pixel0));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            using (Graphics gfx = Graphics.FromImage(start.bitmap))
-                gfx.DrawImage(layer0, new Rectangle(0, 0, start.width, start.height));
-            return start.bitmap;
-        }
-        #endregion
         sealed class Error
         {
             internal static int[,] GetArray(int width, int height, int size = 16)
@@ -521,18 +340,6 @@ namespace cotf.Base
             {
                 brush[m, n] = value;
             }
-        }
-        public static Color LightAverage(Bitmap bitmap)
-        {
-            Color[,] map = new Color[bitmap.Width, bitmap.Height];
-            for (int i = 0; i < bitmap.Width; i++)
-            {
-                for (int j = 0; j < bitmap.Height; j++)
-                {
-                    map[i, j] = bitmap.GetPixel(i, j);
-                }
-            }
-            return Ext.Average(map);
         }
         public static Bitmap ErrorResult(int width, int height, int size = 16)
         {
@@ -596,84 +403,6 @@ namespace cotf.Base
             }
             return result;
         }
-        public static bool Dynamic(List<Tile> brush, Lightmap map, Lamp light, float range)
-        {
-            Vector2 c = light.position;
-            for (int n = 0; n < brush.Count; n++)
-            {
-                Vector2[] corner = new Vector2[]
-                {
-                    brush[n].position,
-                    brush[n].position + new Vector2(brush[n].width, 0),
-                    brush[n].position + new Vector2(0, brush[n].height),
-                    brush[n].position + new Vector2(brush[n].width, brush[n].height)
-                };
-                corner = corner.OrderByDescending(t => Helper.Distance(c, t)).ToArray();
-                Vector2[] v2 = new Vector2[] { corner[1], corner[2] };
-                double a0 = Helper.AngleTo(v2[0], c);
-                double a1 = Helper.AngleTo(v2[1], c);
-                double angle = Helper.AngleTo(map.Center, c);
-                if (light.position.X < map.Center.X)
-                {
-                    a0 = Helper.AngleTo(c, v2[0]);
-                    a1 = Helper.AngleTo(c, v2[1]);
-                    angle = Helper.AngleTo(c, map.Center);
-                }
-                Vector2[] _corner = corner.Concat(new Vector2[] { map.Center }).ToArray();
-                _corner = _corner.OrderBy(t => Helper.Distance(c, t)).ToArray();
-
-                float dist = (float)Helper.Distance(c, map.Center);
-                float dist2 = (float)Helper.Distance(c, _corner[1]);
-                double[] _angle = new double[] { a0, a1 }.OrderByDescending(t => t).ToArray();
-                if (angle > _angle[1] && angle < _angle[0])
-                {
-                    if (dist > dist2)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-        public static bool Dynamic(List<Tile> brush, Entity entity, Lamp light, float range)
-        {
-            Vector2 c = light.position;
-            for (int n = 0; n < brush.Count; n++)
-            {
-                Vector2[] corner = new Vector2[]
-                {
-                    brush[n].position,
-                    brush[n].position + new Vector2(brush[n].width, 0),
-                    brush[n].position + new Vector2(0, brush[n].height),
-                    brush[n].position + new Vector2(brush[n].width, brush[n].height)
-                };
-                corner = corner.OrderByDescending(t => Helper.Distance(c, t)).ToArray();
-                Vector2[] v2 = new Vector2[] { corner[1], corner[2] };
-                double a0 = Helper.AngleTo(v2[0], c);
-                double a1 = Helper.AngleTo(v2[1], c);
-                double angle = Helper.AngleTo(entity.Center, c);
-                if (light.position.X < entity.Center.X)
-                {
-                    a0 = Helper.AngleTo(c, v2[0]);
-                    a1 = Helper.AngleTo(c, v2[1]);
-                    angle = Helper.AngleTo(c, entity.Center);
-                }
-                Vector2[] _corner = corner.Concat(new Vector2[] { entity.Center }).ToArray();
-                _corner = _corner.OrderBy(t => Helper.Distance(c, t)).ToArray();
-
-                float dist = (float)Helper.Distance(c, entity.Center);
-                float dist2 = (float)Helper.Distance(c, _corner[1]);
-                double[] _angle = new double[] { a0, a1 }.OrderByDescending(t => t).ToArray();
-                if (angle > _angle[1] && angle < _angle[0])
-                {
-                    if (dist > dist2)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
         private static bool dynamic(List<Tile> brush, Vector2 pixel, Vector2 topLeft, Lamp light, float range)
         {
             Vector2 c = light.position;
@@ -682,9 +411,9 @@ namespace cotf.Base
                 Vector2[] corner = new Vector2[]
                 {
                     brush[n].position,
-                    brush[n].position + new Vector2(brush[n].width, 0),
-                    brush[n].position + new Vector2(0, brush[n].height),
-                    brush[n].position + new Vector2(brush[n].width, brush[n].height)
+                    brush[n].position + new Vector2(brush[n].Width, 0),
+                    brush[n].position + new Vector2(0, brush[n].Height),
+                    brush[n].position + new Vector2(brush[n].Width, brush[n].Height)
                 };
                 corner = corner.OrderByDescending(t => Helper.Distance(c, t)).ToArray();
                 Vector2[] v2 = new Vector2[] { corner[1], corner[2] };
@@ -727,7 +456,7 @@ namespace cotf.Base
                     if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
                     {
                         Color srcPixel = layer0.GetPixel(i, j);
-                        layer1.SetPixel(i, j, Ext.Multiply(srcPixel, light.lampColor, radius));
+                        layer1.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
                     }
                 }
             }
@@ -735,151 +464,36 @@ namespace cotf.Base
                 gfx.DrawImage(layer1, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
             return layer0;
         }
-        public static Bitmap Lightpass0(Bitmap bitmap, Vector2 topLeft, Lamp light, float range)
-        {
-            Bitmap layer0 = (Bitmap)bitmap.Clone();
-            using (Bitmap layer1 = new Bitmap(bitmap.Width, bitmap.Height))
-            { 
-                for (int i = 0; i < bitmap.Width; i++)
-                {
-                    for (int j = 0; j < bitmap.Height; j++)
-                    {
-                        float distance = (float)Helper.Distance(topLeft + new Vector2(i, j), light.position);
-                        float radius = Helper.NormalizedRadius(distance, range);
-                        if (radius > 0f)
-                        {
-                            Color srcPixel = layer0.GetPixel(i, j);
-                            layer1.SetPixel(i, j, Ext.Multiply(srcPixel, light.lampColor, radius));
-                        }
-                    }
-                }
-                using (Graphics gfx = Graphics.FromImage(layer0))
-                    gfx.DrawImage(layer1, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
-            }
-            return layer0;
-        }
-        public static Bitmap Lightpass0(Bitmap bitmap, Lightmap map, Vector2 topLeft, Lamp light)
-        {
-            Bitmap layer0 = (Bitmap)bitmap.Clone();
-            using (Bitmap layer1 = new Bitmap(bitmap.Width, bitmap.Height))
-            { 
-                for (int i = 0; i < bitmap.Width; i++)
-                {
-                    for (int j = 0; j < bitmap.Height; j++)
-                    {
-                        float distance = (float)Helper.Distance(topLeft + new Vector2(i, j), light.position);
-                        float radius = Helper.NormalizedRadius(distance, light.range);
-                        if (radius > 0f)
-                        {
-                            Color srcPixel = layer0.GetPixel(i, j);
-                            layer1.SetPixel(i, j, Ext.Multiply(srcPixel, light.lampColor, radius));
-                        }
-                    }
-                }
-                using (Graphics gfx = Graphics.FromImage(layer0))
-                    gfx.DrawImage(layer1, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
-            }
-            return layer0;
-        }
-        public static void LightmapHandling(Image texture, Entity ent, float gamma, Graphics graphics)
-        {
-            Lightmap map = Lightmap.GetSafely(ent.X / Tile.Size, ent.Y / Tile.Size);
-            ent.color = map.color;
-            Drawing.TextureLighting(texture, ent.hitbox, ent, gamma, graphics);
-        }
         public static void TextureLighting(Image texture, Rectangle hitbox, Entity ent, float gamma, Graphics graphics)
         {
-            using (Bitmap bitmap = new Bitmap(ent.width, ent.height))
+            using (Bitmap bitmap = new Bitmap(ent.Width, ent.Height))
             { 
                 using (Graphics gfx = Graphics.FromImage(bitmap))
                 {
-                    gfx.DrawImage(texture, new Rectangle(0, 0, ent.width, ent.height));
+                    gfx.DrawImage(texture, new Rectangle(0, 0, ent.Width, ent.Height));
                     //graphics.DrawImage(bitmap, hitbox);                    
-                    ent.colorTransform = Drawing.SetColor(Ext.AdditiveV2(ent.color, ent.defaultColor));
+                    var colorTransform = Drawing.SetColor(Ext.AdditiveV2(ent.color, ent.DefaultColor));
                     if (ent.inShadow)
                     {
-                        ent.colorTransform.SetGamma(gamma);
+                        colorTransform.SetGamma(gamma);
                     }
-                    graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, ent.colorTransform);
+                    graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, colorTransform);
                 }
             }
-        }
-        public static void TextureLighting(Image texture, Rectangle hitbox, Entity ent, Graphics graphics)
-        {
-            using (Bitmap bitmap = new Bitmap(ent.width, ent.height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    gfx.DrawImage(texture, new Rectangle(0, 0, ent.width, ent.height));
-                    graphics.DrawImage(bitmap, hitbox);
-                    if (ent.alpha > 0f)
-                    {
-                        ent.colorTransform = Drawing.SetColor(Ext.Multiply(Ext.NonAlpha(ent.color), ent.defaultColor), ent.alpha);
-                        if (ent.inShadow)
-                        { 
-                            ent.colorTransform.SetGamma(1.5f);
-                        }
-                        graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, ent.colorTransform);
-                    }
-                }
-            }
-            ent.alpha = 0f;
-            ent.color = ent.defaultColor;
-        }
-        public static void TextureLighting(Image texture, Rectangle hitbox, Tile ent, Lightmap map, float gamma, Graphics graphics)
-        {
-            using (Bitmap bitmap = new Bitmap(ent.width, ent.height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    gfx.DrawImage(texture, new Rectangle(0, 0, ent.width, ent.height));
-                    graphics.DrawImage(bitmap, hitbox);
-                    ent.colorTransform = Drawing.SetColor(Ext.Multiply(Ext.NonAlpha(map.color), map.DefaultColor));
-                    if (ent.inShadow)
-                    {
-                        ent.colorTransform.SetGamma(gamma);
-                    }
-                    graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, ent.colorTransform);
-                }
-            }
-            ent.color = map.DefaultColor;
-        }
-        public static void TextureLighting(Image texture, Rectangle hitbox, Lightmap map, Entity ent, float gamma, Graphics graphics)
-        {
-            using (Bitmap bitmap = new Bitmap(ent.width, ent.height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    gfx.DrawImage(texture, new Rectangle(0, 0, ent.width, ent.height));
-                    graphics.DrawImage(bitmap, hitbox);
-                    if (map.alpha > 0f)
-                    {
-                        ent.colorTransform = Drawing.SetColor(Ext.AdditiveV2(Ext.NonAlpha(map.color), map.DefaultColor, map.alpha));
-                        if (ent.inShadow)
-                        {
-                            ent.colorTransform.SetGamma(gamma);
-                        }
-                        graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, ent.colorTransform);
-                    }
-                }
-            }
-            map.alpha = 1f;
-            map.color = map.DefaultColor;
-            ent.color = map.DefaultColor;
         }
         public static Bitmap TextureLighting(Image texture, Rectangle hitbox, Lightmap map, Entity ent, float gamma, float alpha, Graphics graphics)
         {
-            Bitmap bitmap = new Bitmap(ent.width, ent.height);
+            Bitmap bitmap = new Bitmap(ent.Width, ent.Height);
             using (Graphics gfx = Graphics.FromImage(bitmap))
             {
                 if (alpha > 0f)
                 {
-                    ent.colorTransform = Drawing.SetColor(Ext.AdditiveV2(ent.color, map.color, alpha));
+                    var colorTransform = Drawing.SetColor(Ext.AdditiveV2(ent.color, map.color, alpha));
                     if (ent.inShadow)
                     {
-                        ent.colorTransform.SetGamma(gamma);
+                        colorTransform.SetGamma(gamma);
                     }
-                    graphics.DrawImage(texture, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, ent.colorTransform);
+                    graphics.DrawImage(texture, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, colorTransform);
                 }
                 else
                 {
@@ -890,144 +504,6 @@ namespace cotf.Base
             map.color = map.DefaultColor;
             ent.color = map.DefaultColor;
             return bitmap;
-        }
-        public static void TextureLighting(Image texture, Rectangle hitbox, ref Color color, Color startColor, ref float alpha, Graphics graphics, ImageAttributes attr)
-        {
-            using (Bitmap bitmap = new Bitmap(hitbox.Width, hitbox.Height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    gfx.DrawImage(texture, new Rectangle(0, 0, hitbox.Width, hitbox.Height));
-                    graphics.DrawImage(bitmap, hitbox);
-                    if (alpha > 0f)
-                    {
-                        attr = Drawing.SetColor(color, alpha);
-                        graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, attr);
-                    }
-                }
-            }
-            alpha = 0f;
-            color = startColor;
-        }
-        public static void TextureLighting(Image texture, Rectangle hitbox, ref Color color, Color startColor, ref float alpha, Lightmap map, Graphics graphics, ImageAttributes attr)
-        {
-            using (Bitmap bitmap = new Bitmap(hitbox.Width, hitbox.Height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    attr = Drawing.SetColor(map.DefaultColor);
-                    gfx.DrawImage(texture, new Rectangle(0, 0, hitbox.Width, hitbox.Height));
-                    graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, attr);
-                    if (alpha != 0f)
-                    { 
-                        attr = Drawing.SetColor(map.color, alpha);
-                        graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, attr);
-                    }
-                }
-            }
-            alpha = 0f;
-            color = startColor;
-        }
-        public static void TextureLighting(Image texture, Rectangle hitbox, ref Color color, Color startColor, ref float alpha, Graphics graphics)
-        {
-            using (Bitmap bitmap = new Bitmap(hitbox.Width, hitbox.Height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    var attr = Drawing.SetColor(startColor);
-                    gfx.DrawImage(texture, new Rectangle(0, 0, hitbox.Width, hitbox.Height));
-                    graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, attr);
-                    if (alpha != 0f)
-                    {
-                        attr = Drawing.SetColor(color, alpha);
-                        graphics.DrawImage(bitmap, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, attr);
-                    }
-                }
-            }
-            alpha = 0f;
-            color = startColor;
-        }
-        public static Bitmap RecolorTexture(ref Bitmap texture, Color color)
-        {
-            using (Graphics gfx = Graphics.FromImage(texture))
-            {
-                gfx.DrawImage(texture, new Rectangle(0, 0, texture.Width, texture.Height), 0, 0, texture.Width, texture.Height, GraphicsUnit.Pixel, Drawing.SetColor(color));
-            }
-            return texture;
-        }
-        [Obsolete("Drawing with a light map is currently not integrated.")]
-        public static void BrushLighting(Image texture, Lightmap map, Background ent, Lamp light, Graphics graphics)
-        {
-            Bitmap bitmap = new Bitmap(ent.width, ent.height);
-            using (Graphics gfx = Graphics.FromImage(bitmap))
-            {
-                gfx.DrawImage(texture, new Rectangle(0, 0, ent.width, ent.height));
-                graphics.DrawImage(bitmap, ent.hitbox);
-                for (int i = 0; i < ent.width; i += map.ScaleX)
-                {
-                    for (int j = 0; j < ent.height; j += map.ScaleY)
-                    {
-                        float distance = (float)Helper.Distance(new Vector2(ent.X, ent.Y) + new Vector2(i, j), light.position);
-                        float radius = Helper.NormalizedRadius(distance, light.range);
-                        if (radius != 0f && ent.alpha > 0f)
-                        {
-                            ent.colorTransform = Drawing.SetColor(ent.color, ent.alpha);
-                            graphics.DrawImage(texture, ent.hitbox, i, j, map.ScaleX, map.ScaleY, GraphicsUnit.Pixel, ent.colorTransform);
-                        }
-                    }
-                }
-            }
-            ent.alpha = 0f;
-            ent.color = ent.defaultColor;
-        }
-        public static void BrushLighting(Lightmap map, Tile ent, Lamp light, Graphics graphics)
-        {
-            using (Bitmap bitmap = new Bitmap(ent.width, ent.height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    gfx.FillRectangle(new SolidBrush(ent.defaultColor), new Rectangle(0, 0, ent.width, ent.height));
-                    for (int i = 0; i < ent.width; i += map.ScaleX)
-                    { 
-                        for (int j = 0; j < ent.height; j += map.ScaleY)
-                        {
-                            float distance = (float)Helper.Distance(new Vector2(ent.i * ent.width, ent.j * ent.height) + new Vector2(i, j), light.position);
-                            float radius = Helper.NormalizedRadius(distance, light.range);
-                            gfx.FillRectangle(new SolidBrush(Ext.AdditiveV2(ent.defaultColor, Lamp.TorchLight, radius)), new Rectangle(i, j, map.ScaleX, map.ScaleY));
-                        }
-                    }
-                }
-                graphics.DrawImage(bitmap, ent.hitbox);
-            }
-        }
-        public static void BrushLighting(Lightmap map, Background ent, Lamp light, Graphics graphics)
-        {
-            using (Bitmap bitmap = new Bitmap(ent.width, ent.height))
-            { 
-                using (Graphics gfx = Graphics.FromImage(bitmap))
-                {
-                    gfx.FillRectangle(new SolidBrush(ent.defaultColor), new Rectangle(0, 0, ent.width, ent.height));
-                    for (int i = 0; i < ent.width; i += map.ScaleX)
-                    {
-                        for (int j = 0; j < ent.height; j += map.ScaleY)
-                        {
-                            float distance = (float)Helper.Distance(new Vector2(ent.X, ent.Y) + new Vector2(i, j), light.position);
-                            float radius = Helper.NormalizedRadius(distance, light.range);
-                            gfx.FillRectangle(new SolidBrush(Ext.AdditiveV2(ent.defaultColor, Lamp.TorchLight, radius)), new Rectangle(i, j, map.ScaleX, map.ScaleY));
-                        }
-                    }
-                }
-                graphics.DrawImage(bitmap, ent.hitbox);
-            }
-        }
-        [Obsolete("The Ext.Multiply Color extension provides a more accurate color transform.")]
-        public static Color FullColorShift(Color color, Color newColor, float distance)
-        {
-            return Color.FromArgb(
-                (int)Math.Max(Math.Min(color.A * distance, 255), 0),
-                (int)Math.Max(Math.Min(color.R * (newColor.R / 255f), 255), 0),
-                (int)Math.Max(Math.Min(color.G * (newColor.G / 255f), 255), 0),
-                (int)Math.Max(Math.Min(color.B * (newColor.B / 255f), 255), 0));
         }
         public static Color TranslucentColorShift(Color color, float distance)
         {

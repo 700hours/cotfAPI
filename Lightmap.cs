@@ -3,35 +3,40 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using cotf.Base;
-using cotf.World;
-using Microsoft.Xna.Framework;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace cotf.Base
 {
-    public class Lightmap : Entity, IDisposable
+    public class Lightmap : Entity
     {
-        
-        private Lightmap()
+        int i, j;
+        Entity? parent;
+        public Lightmap(int i, int j, Size size, Margin margin)
         {
-        }
-        public Lightmap(int i, int j)
-        {
+            name = "Lightmap";
+            active = true;
+            Width = size.Width;
+            Height = size.Height;
+            color = DefaultColor;
+            position = new Vector2(i * Width, j * Height);
+            alpha = 0f;
+            this.margin = margin;
             this.i = i;
             this.j = j;
-            position = new Vector2(i * Size.Width, j * Size.Height);
-            active = true;
-            color = DefaultColor;
         }
-        public bool onScreen =>
-                position.X >= Main.myPlayer.position.X - Main.ScreenWidth / 2 &&
-                position.X <= Main.myPlayer.position.X + Main.ScreenWidth / 2 &&
-                position.Y >= Main.myPlayer.position.Y - Main.ScreenHeight / 2 &&
-                position.Y <= Main.myPlayer.position.Y + Main.ScreenHeight / 2;
+        public override bool PreUpdate()
+        {
+            return onScreen =
+                position.X < Lib.OutputWidth &&
+                position.X >= 0 &&
+                position.Y < Lib.OutputHeight &&
+                position.Y >= 0;
+        }
         public Color Update(Entity ent)
         {
             if (!active)
@@ -43,7 +48,7 @@ namespace cotf.Base
             }
             return color;
         }
-        public Color Update()
+        public Color InnactiveCheck()
         {
             if (!active)
                 return DefaultColor;
@@ -51,42 +56,32 @@ namespace cotf.Base
         }
         public void LampEffect(Lamp lamp)
         {
+            if (!PreUpdate())
+                return;
             float num = 0;
             if (!onScreen || !active)
                 return;
-            // Ignore world lamps due to prerendered lighting
             if (lamp.owner == 255 && parent != null && parent.GetType() == typeof(Background))
             {
-                num = keepLit ? 0.5f : Background.RangeNormal(lamp.Center, this.Center, Tile.Range);
+                num = Helper.RangeNormal(lamp.Center, this.Center, range);
                 if (num == 0f)
                     return;
-                alpha = 0f;
-                alpha += Math.Max(0, num);
-                alpha = Math.Min(alpha, 1f);
-                color = Ext.AdditiveV2(color, lamp.lampColor, num / 2f);
+                AdjustColor(num, lamp);
                 return;
             }
-            if (parent != null && !parent.solid && !Entity.SightLine(lamp.Center, parent, Tile.Size / 5)) 
+            if (parent != null && !Helper.SightLine(lamp.Center, parent, margin.Right / 5))
                 return;
-            num = keepLit ? 0.5f : Background.RangeNormal(lamp.Center, this.Center, Tile.Range);
+            num = Helper.RangeNormal(lamp.Center, this.Center, range);
             if (num == 0f)
                 return;
+            AdjustColor(num, lamp);
+        }
+        private void AdjustColor(float num, Lamp lamp)
+        {
             alpha = 0f;
             alpha += Math.Max(0, num);
             alpha = Math.Min(alpha, 1f);
-            color = Ext.AdditiveV2(color, lamp.lampColor, num);
-        }
-        public static Lightmap GetSafely(int x, int y)
-        {
-            return Main.lightmap[Math.Max(0, Math.Min(x, Main.WorldHeight / Tile.Size - 1)), Math.Max(0, Math.Min(y, Main.WorldWidth / Tile.Size - 1))];
-        }
-        public void Dispose()
-        {
-            if (Main.lightmap[i, j] != null)
-            {
-                Main.lightmap[i, j].active = false;
-                Main.lightmap[i, j] = null;
-            }
+            color = Ext.AdditiveV2(color, lamp.color, num / 2f);
         }
         public override string ToString()
         {
