@@ -16,12 +16,25 @@ namespace cotf
 {
     public class Lamp : Entity
     {
+        static bool init;
+        public static Lamp? Instance;
         public int owner = 255;
         public bool staticLamp;
+        private Lamp()
+        {
+        }
         private Lamp(float range)
         {
             this.range = range;
             this.active = true;
+        }
+        public static void Load()
+        {
+            if (!init)
+            {
+                Instance = new Lamp();
+                init = true;
+            }
         }
         public override bool PreUpdate()
         {
@@ -66,7 +79,6 @@ namespace cotf
             Lib.lamp[num] = new Lamp(range);
             Lib.lamp[num].active = true;
             Lib.lamp[num].position = new Vector2(x, y);
-            Lib.lamp[num].range = range;
             Lib.lamp[num].whoAmI = num;
             Lib.lamp[num].owner = owner;
             Lib.lamp[num].color = color;

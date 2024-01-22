@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,8 +20,13 @@ namespace cotf
     public class Background : Entity
     {
         int i, j;
-        internal Image texture;
-        public Background(int i, int j, Size size, Margin margin)
+        internal Image? texture;
+        private static bool init;
+        public static Background? Instance;
+        private Background()
+        {
+        }
+        public Background(int i, int j, float range, Size size, Margin margin)
         {
             name = "Background";
             this.margin = margin;
@@ -30,9 +36,18 @@ namespace cotf
             color = DefaultColor;
             position = new Vector2(i * Width, j * Height);
             alpha = 0f;
+            this.range = range;
             this.i = i;
             this.j = j;
             texture = Asset<Bitmap>.Request(Texture);
+        }
+        public static void Load()
+        {
+            if (!init)
+            {
+                Instance = new Background();
+                init = true;
+            }
         }
         public override string Texture => $"Textures\\background{i}{j}";
         public override Color DefaultColor => Color.Gray;
@@ -49,25 +64,14 @@ namespace cotf
         }
         public override void Draw(Graphics graphics)
         {
-            if (!active || !onScreen)
+            if (!active || !PreUpdate())
                 return;
             if (texture == null)
                 return;
             base.PostFX();
-            if (alpha > 0f)
-            {
-                Lightmap map;
-                (map = Lib.lightmap[i, j]).Update(this);
-                Drawing.TextureLighting(texture, Hitbox, map, this, gamma, alpha, graphics);
-            }
-            if (alpha < 1f)
-            {
-                alpha += 1f / 10f;
-            }
-        }
-        public static Background GetSafely(int i, int j)
-        {
-            return Lib.background[Math.Max(Math.Min(i, Lib.background.GetLength(0) - 1), 0), Math.Max(Math.Min(j, Lib.background.GetLength(1) - 1), 0)];
+            Lightmap map;
+            (map = Lib.lightmap[i, j]).Update(this);
+            Drawing.TextureLighting(texture, Hitbox, map, this, gamma, alpha, graphics);
         }
     }
 }

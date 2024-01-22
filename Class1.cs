@@ -1,39 +1,92 @@
 ﻿using cotf.Base;
-using cotf.World;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 
 namespace cotf
 {
-    public class Lib
+    public sealed class Lib
     {
-        internal static int OutputWidth;
-        internal static int OutputHeight;
-        internal static Lightmap[,] lightmap = new Lightmap[,] { };
-        internal static Tile[,] tile = new Tile[,] { };
-        internal static Bitmap[,] texture = new Bitmap[,] { };
-        internal static Background[,] background = new Background[,] { };
-        internal static Lamp[] lamp = new Lamp[81];
         internal static string TexturePath = "";
+        internal static Size size;
+        public static int OutputWidth;
+        public static int OutputHeight;
+        public static Lightmap[,] lightmap = new Lightmap[,] { };
+        public static Tile[,] tile = new Tile[,] { };
+        public static Bitmap[,] texture = new Bitmap[,] { };
+        public static Background[,] background = new Background[,] { };
+        public static Lamp[] lamp = new Lamp[81];
         public static rand rand = new rand();
-        internal void Initialize(int width, int height, Size tileSize)
+        public static void SetDimensions(int width, int height)
         {
+            OutputWidth = width;
+            OutputHeight = height;
+        }
+        public static void Initialize(Size tileSize)
+        {
+            size = tileSize;
+            int width = OutputWidth;
+            int height = OutputHeight;
+            Background.Load();
+            Lamp.Load();
+            Lightmap.Load();
+            Tile.Load();
             lightmap = new Lightmap[width / tileSize.Width, height / tileSize.Height];
             tile = new Tile[width / tileSize.Width, height / tileSize.Height];
             texture = new Bitmap[width / tileSize.Width, height / tileSize.Height];
             background = new Background[width / tileSize.Width, height / tileSize.Height];
-            if (!Directory.Exists(TexturePath = Path.Combine(Directory.GetCurrentDirectory(), "Textures")))
-            {
-                Directory.CreateDirectory(TexturePath);
-            }
-            OutputWidth = width;
-            OutputHeight = height;
+            InitArray(width, height, tileSize);
         }
-        public Tile[,] CreateLayout()
+        static void InitArray(int width, int height, Size tileSize)
         {
-
+            float range = 300f;
+            for (int m = 0; m < width; m += tileSize.Width)
+            {
+                for (int n = 0; n < height; n += tileSize.Height)
+                {
+                    int i = m / tileSize.Width;
+                    int j = n / tileSize.Height;
+                    background[i, j] = new Background(i, j, range, tileSize, new Margin(tileSize.Width));
+                    tile[i, j] = new Tile(i, j, range, tileSize, true);
+                    lightmap[i, j] = new Lightmap(i, j, range, tileSize, new Margin(tileSize.Width));
+                }
+            }
+        }
+        public static void UpdateLampMaps(int size)
+        {
+            foreach (Lamp lamp in Lib.lamp)
+            {
+                if (lamp == null || !lamp.active) 
+                    continue;
+                int radius = (int)lamp.range / 2;
+                for (int i = (int)lamp.Center.X - radius; i <= lamp.Center.X + radius; i += size)
+                {
+                    for (int j = (int)lamp.Center.Y - radius; j <= lamp.Center.Y + radius; j += size)
+                    {
+                        int x = Math.Min(Math.Max(i / size, 0), Lib.OutputWidth / size - 1);
+                        int y = Math.Min(Math.Max(j / size, 0), Lib.OutputHeight / size - 1);
+                        Lib.lightmap[x, y].LampEffect(lamp);
+                    }
+                }
+            }
+        }
+        public static void Render(ref Image input)
+        {
+            UpdateLampMaps(size.Width);
+            using (Graphics g = Graphics.FromImage(input))
+            {
+                LightPass.PreProcessing();
+                foreach (var item in Lib.background)
+                {
+                    item?.Draw(g);
+                }
+                foreach (var item in Lib.tile)
+                {
+                    item?.Draw(g);
+                }
+            }
         }
     }
 }

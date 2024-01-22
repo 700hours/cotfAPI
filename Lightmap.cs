@@ -15,8 +15,13 @@ namespace cotf.Base
     public class Lightmap : Entity
     {
         int i, j;
+        static bool init;
+        public static Lightmap? Instance;
         Entity? parent;
-        public Lightmap(int i, int j, Size size, Margin margin)
+        private Lightmap()
+        {
+        }
+        public Lightmap(int i, int j, float range, Size size, Margin margin)
         {
             name = "Lightmap";
             active = true;
@@ -25,9 +30,18 @@ namespace cotf.Base
             color = DefaultColor;
             position = new Vector2(i * Width, j * Height);
             alpha = 0f;
+            this.range = range;
             this.margin = margin;
             this.i = i;
             this.j = j;
+        }
+        public static void Load()
+        {
+            if (!init)
+            {
+                Instance = new Lightmap();
+                init = true;
+            }
         }
         public override bool PreUpdate()
         {
@@ -53,35 +67,6 @@ namespace cotf.Base
             if (!active)
                 return DefaultColor;
             return color;
-        }
-        public void LampEffect(Lamp lamp)
-        {
-            if (!PreUpdate())
-                return;
-            float num = 0;
-            if (!onScreen || !active)
-                return;
-            if (lamp.owner == 255 && parent != null && parent.GetType() == typeof(Background))
-            {
-                num = Helper.RangeNormal(lamp.Center, this.Center, range);
-                if (num == 0f)
-                    return;
-                AdjustColor(num, lamp);
-                return;
-            }
-            if (parent != null && !Helper.SightLine(lamp.Center, parent, margin.Right / 5))
-                return;
-            num = Helper.RangeNormal(lamp.Center, this.Center, range);
-            if (num == 0f)
-                return;
-            AdjustColor(num, lamp);
-        }
-        private void AdjustColor(float num, Lamp lamp)
-        {
-            alpha = 0f;
-            alpha += Math.Max(0, num);
-            alpha = Math.Min(alpha, 1f);
-            color = Ext.AdditiveV2(color, lamp.color, num / 2f);
         }
         public override string ToString()
         {

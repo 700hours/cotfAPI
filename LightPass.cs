@@ -8,9 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using cotf.Base;
-using cotf.World;
 using System.Threading;
-using Microsoft.Xna.Framework;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -18,7 +16,7 @@ namespace cotf
 {
     public sealed class LightPass
     {
-        public static List<Tile> NearbyTile(Lamp lamp)
+        static List<Tile> NearbyTile(Lamp lamp)
         {
             List<Tile> brush = new List<Tile>();
             for (int i = 0; i < Lib.tile.GetLength(0); i++)
@@ -36,7 +34,7 @@ namespace cotf
             }
             return brush;
         }
-        public static List<Background> NearbyFloor(Lamp lamp)
+        static List<Background> NearbyFloor(Lamp lamp)
         {
             List<Background> brush = new List<Background>();
             for (int i = 0; i < Lib.background.GetLength(0); i++)

@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using cotf.Base;
-using cotf.World;
 
 namespace cotf.Assets
 {
@@ -20,11 +19,11 @@ namespace cotf.Assets
         }
         public static T Request(string name)
         {
-            return (T)Bitmap.FromFile("./Textures/" + name + ".png");
+            return (T)Bitmap.FromFile(name + ".png");
         }
         public static T Request(string name, string extension)
         {
-            return (T)Bitmap.FromFile("./Textures/" + name + extension);
+            return (T)Bitmap.FromFile(name + extension);
         }
         public static T Get(Type type, int style)
         {

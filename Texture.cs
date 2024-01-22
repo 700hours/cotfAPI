@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace cotf
 {
-    internal class Texture
+    public static class Texture
     {
-        public static Bitmap[,] SplitImage(Bitmap bitmap, Size size)
+        static Bitmap[,] SplitImage(Bitmap bitmap, Size size)
         {
             size.Width -= bitmap.Width % size.Width;
             size.Height -= bitmap.Height % size.Height;
@@ -33,14 +33,42 @@ namespace cotf
         }
         public static void OutputArrayToFiles(string prefix, Bitmap bitmap, Size size)
         {
-            Bitmap[,] value = SplitImage(bitmap, size);
-            for (int i = 0; i < bitmap.Width; i += size.Width)
+            if (!Directory.Exists(Lib.TexturePath = Path.Combine(Directory.GetCurrentDirectory(), "Textures")))
             {
-                for (int j = 0; j < bitmap.Height; j += size.Height)
+                Directory.CreateDirectory(Lib.TexturePath);
+            }
+            Bitmap[,] value = SplitImage(bitmap, size);
+            for (int m = 0; m < bitmap.Width; m += size.Width)
+            {
+                for (int n = 0; n < bitmap.Height; n += size.Height)
                 {
-                    i /= size.Width;
-                    j /= size.Height;
+                    int i = m / size.Width;
+                    int j = n / size.Height;
                     value[i, j].Save(Path.Combine(Lib.TexturePath, $"{prefix}{i}{j}.png"), ImageFormat.Png);
+                }
+            }
+        }
+        public static void GenerateColorTextureFiles(string prefix, Color color, Size size)
+        {
+            if (!Directory.Exists(Lib.TexturePath = Path.Combine(Directory.GetCurrentDirectory(), "Textures")))
+            {
+                Directory.CreateDirectory(Lib.TexturePath);
+            }
+            using (Bitmap bitmap = new Bitmap(Lib.OutputWidth, Lib.OutputHeight))
+            {
+                using (Graphics graphics = Graphics.FromImage(bitmap))
+                {
+                    graphics.FillRectangle(new SolidBrush(color), 0, 0, Lib.OutputWidth, Lib.OutputHeight);
+                }
+                Bitmap[,] value = SplitImage(bitmap, size);
+                for (int m = 0; m < bitmap.Width; m += size.Width)
+                {
+                    for (int n = 0; n < bitmap.Height; n += size.Height)
+                    {
+                        int i = m / size.Width;
+                        int j = n / size.Height;
+                        value[i, j].Save(Path.Combine(Lib.TexturePath, $"{prefix}{i}{j}.png"), ImageFormat.Png);
+                    }
                 }
             }
         }

@@ -17,10 +17,16 @@ namespace cotf
     public class Tile : Entity
     {
         int i, j;
-        Image texture;
+        Image? texture;
         public bool Occlude { get; set;}
-        public Tile(int i, int j, Size size, bool occlude)
+        private static bool init;
+        public static Tile? Instance;
+        private Tile()
         {
+        }
+        public Tile(int i, int j, float range, Size size, bool occlude)
+        {
+            Load();
             name = "Tile";
             active = true;
             Width = size.Width;
@@ -28,10 +34,19 @@ namespace cotf
             color = DefaultColor;
             position = new Vector2(i * Width, j * Height);
             alpha = 0f;
+            this.range = range;
             this.i = i;
             this.j = j;
             Occlude = occlude;
             texture = Asset<Bitmap>.Request(Texture);
+        }
+        public static void Load()
+        {
+            if (!init)
+            {
+                Instance = new Tile();
+                init = true;
+            }
         }
         public override string Texture => $"Textures\\tile{i}{j}";
         public override Color DefaultColor => Color.Gray;
@@ -48,22 +63,19 @@ namespace cotf
         }
         public override void Draw(Graphics graphics)
         {
-            if (active && onScreen)
+            if (active && PreUpdate())
             {
                 if (texture == null)
                     return;
                 base.PostFX();
-                if (alpha > 0f)
-                {
-                    Lightmap map;
-                    (map = Lib.lightmap[i, j]).Update(this);
-                    Drawing.TextureLighting(texture, Hitbox, map, this, gamma, alpha, graphics);
-                }
-                if (alpha < 1f)
-                {
-                    alpha += 1f / 10f;
-                }
+                Lightmap map;
+                (map = Lib.lightmap[i, j]).Update(this);
+                Drawing.TextureLighting(texture, Hitbox, map, this, gamma, alpha, graphics);
             }
+        }
+        public static Tile GetTile(float x, float y, Size size)
+        {
+            return Lib.tile[(int)x / size.Width, (int)y / size.Height];
         }
     }
 }
