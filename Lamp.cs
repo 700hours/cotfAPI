@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -46,8 +45,8 @@ namespace cotf
         }
         public static Color RandomLight()
         {
-            int len = Enum.GetNames<KnownColor>().Length;
-            KnownColor c = Enum.Parse<KnownColor>(Enum.GetNames(typeof(KnownColor))[Lib.rand.Next(len)]);
+            int len = Enum.GetNames(typeof(KnownColor)).Length;
+            KnownColor c = (KnownColor)Enum.Parse(typeof(KnownColor), Enum.GetNames(typeof(KnownColor))[Lib.rand.Next(len)]);
             return Color.FromKnownColor(c);
         }
         public static int AddLamp(Lamp lamp)
