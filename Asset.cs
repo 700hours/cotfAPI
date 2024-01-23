@@ -17,6 +17,14 @@ namespace cotf.Assets
             _Background<T>.Init(_Background<T>.Length = num);
             _Tile<T>.Init(_Tile<T>.Length = num2);
         }
+        public static Bitmap GetBitmap(int i, int j)
+        {
+            return Lib.texture.Find(t => t.i == i && t.j == j).Value;
+        }
+        public static Texture GetTexture(string name)
+        {
+            return Lib.texture.Find(t => t.Name == name);
+        }
         public static T Request(string name)
         {
             return (T)Bitmap.FromFile(name + ".png");

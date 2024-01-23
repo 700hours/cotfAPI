@@ -8,9 +8,23 @@ using System.Threading.Tasks;
 
 namespace cotf
 {
-    public static class Texture
+    public class Texture
     {
-        static Bitmap[,] SplitImage(Bitmap bitmap, Size size)
+        internal int i, j;
+        public string Name { get; set; }
+        public Bitmap Value { get; set; }
+        private Texture(Bitmap texture, string name)
+        {
+            this.Name = name;
+            this.Value = texture;
+        }
+        public static Texture NewTexture(Bitmap tex, int i, int j, string name)
+        {
+            var _tex = new Texture(tex, name) { i = i, j = j };
+            Lib.texture.Add(_tex);
+            return _tex;
+        }
+        public static Bitmap[,] SplitImage(Bitmap bitmap, Size size, string prefix = "background")
         {
             size.Width -= bitmap.Width % size.Width;
             size.Height -= bitmap.Height % size.Height;
@@ -25,7 +39,9 @@ namespace cotf
                         {
                             g.DrawImage(bitmap, new Rectangle(0, 0, size.Width, size.Height), new Rectangle(i, j, size.Width, size.Height), GraphicsUnit.Pixel);
                         }
-                        value[i / size.Width, j / size.Height] = (Bitmap)@new.Clone();
+                        int m = i / size.Width;
+                        int n = j / size.Height;
+                        NewTexture((Bitmap)@new.Clone(), m, n, $"{prefix}{m}{n}");
                     }
                 }
             }
@@ -60,14 +76,13 @@ namespace cotf
                 {
                     graphics.FillRectangle(new SolidBrush(color), 0, 0, Lib.OutputWidth, Lib.OutputHeight);
                 }
-                Bitmap[,] value = SplitImage(bitmap, size);
                 for (int m = 0; m < bitmap.Width; m += size.Width)
                 {
                     for (int n = 0; n < bitmap.Height; n += size.Height)
                     {
                         int i = m / size.Width;
                         int j = n / size.Height;
-                        value[i, j].Save(Path.Combine(Lib.TexturePath, $"{prefix}{i}{j}.png"), ImageFormat.Png);
+                        NewTexture((Bitmap)bitmap.Clone(), i, j, $"{prefix}{i}{j}");
                     }
                 }
             }

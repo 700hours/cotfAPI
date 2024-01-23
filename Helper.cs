@@ -434,8 +434,8 @@ namespace cotf.Base
                 float dist2 = (float)Helper.Distance(c, _corner[1]);
                 double[] _angle = new double[] { a0, a1 }.OrderByDescending(t => t).ToArray();
                 if (angle > _angle[1] && angle < _angle[0])
-                {
-                    if (dist > dist2)
+                {                   // DEBUG, accomodate for error
+                    if (dist > dist2 + 10f)
                     {
                         return false;
                     }

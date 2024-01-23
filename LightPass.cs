@@ -11,6 +11,7 @@ using cotf.Base;
 using System.Threading;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using System.Numerics;
 
 namespace cotf
 {
@@ -75,6 +76,19 @@ namespace cotf
                     }
                 }
             }
+        }
+        public static Bitmap PreProcessing(in Bitmap texture)
+        {
+            Bitmap result = texture;
+            for (int n = 0; n < Lib.lamp.Length; n++)
+            {
+                Lamp lamp = Lib.lamp[n];
+                if (lamp == null || !lamp.active || lamp.owner != 255)
+                    continue;
+                List<Tile> brush = NearbyTile(lamp);
+                Drawing.Lightpass0(brush, result, Vector2.Zero, lamp, lamp.range);
+            }
+            return result;
         }
     }
 }

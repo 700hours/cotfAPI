@@ -38,7 +38,7 @@ namespace cotf
             this.i = i;
             this.j = j;
             Occlude = occlude;
-            texture = Asset<Bitmap>.Request(Texture);
+            texture = Asset<Bitmap>.GetTexture(Texture).Value;
         }
         public static void Load()
         {
@@ -48,7 +48,7 @@ namespace cotf
                 init = true;
             }
         }
-        public override string Texture => $"Textures\\tile{i}{j}";
+        public override string Texture => $"tile{i}{j}";
         public override Color DefaultColor => Color.Gray;
         public override bool PreUpdate()
         {

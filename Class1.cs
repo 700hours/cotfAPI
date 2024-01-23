@@ -15,16 +15,16 @@ namespace cotf
         public static int OutputHeight;
         public static Lightmap[,] lightmap = new Lightmap[,] { };
         public static Tile[,] tile = new Tile[,] { };
-        public static Bitmap[,] texture = new Bitmap[,] { };
         public static Background[,] background = new Background[,] { };
-        public static Lamp[] lamp = new Lamp[81];
+        public static Lamp[] lamp = new Lamp[] { };
+        public static List<Texture> texture = new List<Texture>();
         public static rand rand = new rand();
         public static void SetDimensions(int width, int height)
         {
             OutputWidth = width;
             OutputHeight = height;
         }
-        public static void Initialize(Size tileSize)
+        public static void Initialize(int lampNum, Size tileSize)
         {
             size = tileSize;
             int width = OutputWidth;
@@ -35,8 +35,8 @@ namespace cotf
             Tile.Load();
             lightmap = new Lightmap[width / tileSize.Width, height / tileSize.Height];
             tile = new Tile[width / tileSize.Width, height / tileSize.Height];
-            texture = new Bitmap[width / tileSize.Width, height / tileSize.Height];
             background = new Background[width / tileSize.Width, height / tileSize.Height];
+            lamp = new Lamp[lampNum];
             InitArray(width, height, tileSize);
         }
         static void InitArray(int width, int height, Size tileSize)
@@ -87,6 +87,22 @@ namespace cotf
                     item?.Draw(g);
                 }
             }
+        }
+        public static void UnloadAll()
+        {
+            TexturePath = "";
+            size = Size.Empty;
+            OutputWidth = 0;
+            OutputHeight = 0;
+            lightmap = null;
+            tile = null;
+            background = null;
+            lamp = null;
+            Background.Instance = null;;
+            Lightmap.Instance = null;
+            Tile.Instance = null;
+            Lamp.Instance = null;
+            texture.Clear();
         }
     }
 }
