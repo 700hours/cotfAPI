@@ -49,7 +49,8 @@ namespace cotf
                 init = true;
             }
         }
-        public override string Texture => $"background{i}{j}";
+        public override string TexturePrefix => "background";
+        public override string Texture => $"{TexturePrefix}{i}{j}";
         public override Color DefaultColor => Color.Gray;
         public override bool PreUpdate()
         {

@@ -50,6 +50,7 @@ namespace cotf
         public Margin margin;
         public SizeF scale;
         private Size size;
+        public virtual string TexturePrefix => "";
         public virtual string Texture => "";
         public virtual Color DefaultColor => Color.FromArgb(255, 20, 20, 20);
         public virtual bool PreUpdate() => true;
