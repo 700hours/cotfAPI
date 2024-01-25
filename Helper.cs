@@ -443,6 +443,23 @@ namespace cotf.Base
             }
             return true;
         }
+        public static ThreadBitmap Lightpass0(List<Tile> brush, ThreadBitmap layer0, Vector2 topLeft, Lamp light, float range)
+        {
+            for (int i = 0; i < layer0.Width; i++)
+            {
+                for (int j = 0; j < layer0.Height; j++)
+                {
+                    float distance = (float)Helper.Distance(topLeft + new Vector2(i, j), light.position);
+                    float radius = Helper.NormalizedRadius(distance, range);
+                    if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
+                    {
+                        Color srcPixel = layer0.GetPixel(i, j);
+                        layer0.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
+                    }
+                }
+            }
+            return layer0;
+        }
         public static Bitmap Lightpass0(List<Tile> brush, Bitmap bitmap, Vector2 topLeft, Lamp light, float range)
         {
             Bitmap layer0 = (Bitmap)bitmap.Clone();
@@ -481,29 +498,25 @@ namespace cotf.Base
                 }
             }
         }
-        public static Bitmap TextureLighting(Image texture, Rectangle hitbox, Lightmap map, Entity ent, float gamma, float alpha, Graphics graphics)
+        public static void TextureLighting(Image texture, Rectangle hitbox, Lightmap map, Entity ent, float gamma, float alpha, Graphics graphics)
         {
-            Bitmap bitmap = new Bitmap(ent.Width, ent.Height);
-            using (Graphics gfx = Graphics.FromImage(bitmap))
+            if (alpha > 0f)
             {
-                if (alpha > 0f)
+                var colorTransform = Drawing.SetColor(Ext.AdditiveV2(ent.color, map.color, alpha));
+                if (ent.inShadow)
                 {
-                    var colorTransform = Drawing.SetColor(Ext.AdditiveV2(ent.color, map.color, alpha));
-                    if (ent.inShadow)
-                    {
-                        colorTransform.SetGamma(gamma);
-                    }
-                    graphics.DrawImage(texture, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, colorTransform);
+                    colorTransform.SetGamma(gamma);
                 }
-                else
-                {
-                    graphics.DrawImage(texture, hitbox);
-                }
+                graphics.DrawImage(texture, hitbox, 0, 0, hitbox.Width, hitbox.Height, GraphicsUnit.Pixel, colorTransform);
+                colorTransform.Dispose();
+            }
+            else
+            {
+                graphics.DrawImage(texture, hitbox);
             }
             map.alpha = alpha;
             map.color = map.DefaultColor;
             ent.color = map.DefaultColor;
-            return bitmap;
         }
         public static Color TranslucentColorShift(Color color, float distance)
         {
