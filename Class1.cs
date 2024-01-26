@@ -37,10 +37,12 @@ namespace cotf
             tile = new Tile[width / tileSize.Width, height / tileSize.Height];
             background = new Background[width / tileSize.Width, height / tileSize.Height];
             lamp = new Lamp[lampNum];
-            InitArray(width, height, tileSize);
         }
-        static void InitArray(int width, int height, Size tileSize)
+        public static void InitArray()
         {
+            Size tileSize = size;
+            int width = OutputWidth;
+            int height = OutputHeight;
             float range = 300f;
             for (int m = 0; m < width; m += tileSize.Width)
             {
@@ -74,7 +76,6 @@ namespace cotf
         }
         public static void Render(ref Image input)
         {
-            UpdateLampMaps(size.Width);
             using (Graphics g = Graphics.FromImage(input))
             {
                 LightPass.PreProcessing();
@@ -86,6 +87,18 @@ namespace cotf
                 {
                     item?.Draw(g);
                 }
+            }
+        }
+        public static void Render(Graphics g)
+        {
+            LightPass.PreProcessing();
+            foreach (var item in Lib.background)
+            {
+                item?.Draw(g);
+            }
+            foreach (var item in Lib.tile)
+            {
+                item?.Draw(g);
             }
         }
         public static void UnloadAll()

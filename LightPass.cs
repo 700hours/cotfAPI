@@ -12,6 +12,7 @@ using System.Threading;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using System.Numerics;
+using System.ComponentModel;
 
 namespace cotf
 {
@@ -53,6 +54,22 @@ namespace cotf
             }
             return brush;
         }
+        static ThreadBitmap[,] getThreadBmpArray()
+        {
+            var output = new ThreadBitmap[Lib.background.GetLength(0), Lib.background.GetLength(1)];
+            for (int i = 0; i < Lib.background.GetLength(0); i++)
+            {
+                for (int j = 0; j < Lib.background.GetLength(1); j++)
+                {
+                    output[i, j] = new ThreadBitmap((Bitmap)Lib.background[i, j].texture);
+                } 
+            }
+            return output;
+        }
+        static ThreadBitmap getThreadBmp(int i, int j)
+        {
+            return new ThreadBitmap((Bitmap)Lib.background[i, j].texture);
+        }
         public static void PreProcessing()
         {
             for (int n = 0; n < Lib.lamp.Length; n++)
@@ -62,33 +79,87 @@ namespace cotf
                     continue;
 
                 List<Tile> brush = NearbyTile(lamp);
+                
+                int i = Lib.background.GetLength(0) - 1;
+                int j = Lib.background.GetLength(1) - 1;
+                int num = i + j;
 
-                for (int i = 0; i < Lib.background.GetLength(0); i++)
+                //  DEBUG
+                lamp.range = 600f;
+                while (num-- > 0)
                 {
-                    for (int j = 0; j < Lib.background.GetLength(1); j++)
+                    new Thread(() => 
                     {
+                        BEGIN:
+                        i--;
+                        i = Math.Max(0, i);
+                        j = Math.Max(0, j);
                         if (Lib.background[i, j] == null || !Lib.background[i, j].active)
-                            continue;
-                        if (Helper.Distance(Lib.background[i, j].Center, lamp.Center) <= lamp.range)
                         {
-                            Lib.background[i, j].texture = Drawing.Lightpass0(brush, (Bitmap)Lib.background[i, j].texture, Lib.background[i, j].position, lamp, lamp.range);
                         }
-                    }
+                        else
+                        {
+                            if (Helper.Distance(Lib.background[i, j].Center, lamp.Center) <= lamp.range)
+                            {
+                                try
+                                { 
+                                    var tbmp = getThreadBmp(i, j);
+                                    lock (tbmp)
+                                    {
+                                        var result = Drawing.Lightpass0(brush, tbmp, Lib.background[i, j].position, lamp, lamp.range);
+                                        Lib.background[i, j].texture = tbmp.GetBitmap();
+                                    }
+                                }
+                                catch 
+                                {
+                                    if (i == 0)
+                                    {
+                                        i = Lib.background.GetLength(0) - 1;
+                                        --j;
+                                        goto NEXT; 
+                                    }
+                                    else goto BEGIN;
+                                }
+                            }
+                        }
+                        NEXT:
+                        i = Math.Max(0, i);
+                        j = Math.Max(0, j);
+                        if (Lib.background[i, j] == null || !Lib.background[i, j].active)
+                        {
+                        }
+                        else 
+                        {
+                            if (Helper.Distance(Lib.background[i, j].Center, lamp.Center) <= lamp.range)
+                            {
+                                try
+                                {
+                                    var tbmp = getThreadBmp(i, j);
+                                    lock (tbmp)
+                                    {
+                                        var result = Drawing.Lightpass0(brush, tbmp, Lib.background[i, j].position, lamp, lamp.range);
+                                        Lib.background[i, j].texture = tbmp.GetBitmap();
+                                    }
+                                }
+                                catch 
+                                { 
+                                }
+                            }
+                        }
+                    }).Start();
                 }
             }
         }
-        public static Bitmap PreProcessing(in Bitmap texture)
+        public static void PreProcessing(ref Image texture)
         {
-            Bitmap result = texture;
             for (int n = 0; n < Lib.lamp.Length; n++)
             {
                 Lamp lamp = Lib.lamp[n];
                 if (lamp == null || !lamp.active || lamp.owner != 255)
                     continue;
                 List<Tile> brush = NearbyTile(lamp);
-                Drawing.Lightpass0(brush, result, Vector2.Zero, lamp, lamp.range);
+                texture = Drawing.Lightpass0(brush, (Bitmap)texture, Vector2.Zero, lamp, lamp.range);
             }
-            return result;
         }
     }
 }
