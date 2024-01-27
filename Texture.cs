@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FoundationR;
 
 namespace cotf
 {
@@ -12,36 +13,36 @@ namespace cotf
     {
         internal int i, j;
         public string Name { get; set; }
-        public Bitmap Value { get; set; }
-        private Texture(Bitmap texture, string name)
+        public REW Value { get; set; }
+        private Texture(REW texture, string name)
         {
             this.Name = name;
             this.Value = texture;
         }
-        public static Texture NewTexture(Bitmap tex, int i, int j, string name)
+        public static Texture NewTexture(REW tex, int i, int j, string name)
         {
             var _tex = new Texture(tex, name) { i = i, j = j };
             Lib.texture.Add(_tex);
             return _tex;
         }
-        public static Bitmap[,] SplitImage(Bitmap bitmap, Size size, string prefix = "background")
+        public static REW[,] SplitImage(Bitmap bitmap, Size size, string prefix = "background")
         {
             size.Width -= bitmap.Width % size.Width;
             size.Height -= bitmap.Height % size.Height;
-            Bitmap[,] value = new Bitmap[bitmap.Width / size.Width, bitmap.Height / size.Height];
+            REW[,] value = new REW[bitmap.Width / size.Width, bitmap.Height / size.Height];
             for (int i = 0; i < bitmap.Width; i += size.Width)
             {
                 for (int j = 0; j < bitmap.Height; j += size.Height)
                 {
                     using (Bitmap @new = new Bitmap(size.Width, size.Height))
-                    { 
+                    {
                         using (Graphics g = Graphics.FromImage(@new))
                         {
                             g.DrawImage(bitmap, new Rectangle(0, 0, size.Width, size.Height), new Rectangle(i, j, size.Width, size.Height), GraphicsUnit.Pixel);
                         }
                         int m = i / size.Width;
                         int n = j / size.Height;
-                        NewTexture((Bitmap)@new.Clone(), m, n, $"{prefix}{m}{n}");
+                        NewTexture(REW.Extract((Bitmap)@new.Clone(), 24), m, n, $"{prefix}{m}{n}");
                     }
                 }
             }
