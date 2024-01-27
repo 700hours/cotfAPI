@@ -14,6 +14,10 @@
     <None Remove="lib\**" />
   </ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\FoundationR\FoundationR.csproj" />
+	</ItemGroup>
+
   <ItemGroup>
     <Reference Include="System.Drawing">
       <HintPath>..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Drawing.dll</HintPath>
