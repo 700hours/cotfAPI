@@ -310,37 +310,36 @@ namespace cotf.Base
             return true;
         }
     }
-    
+    public static class Error
+    {
+        public static int[,] GetArray(int width, int height, int size = 16)
+        {
+            int i = width / size;
+            int j = height / size;
+            int[,] brush = new int[i, j];
+            int num = -1;
+            for (int n = 0; n < brush.GetLength(1); n++)
+            {
+                for (int m = 0; m < brush.GetLength(0); m++)
+                {
+                    if (n > 0 && m == 0)
+                    {
+                        num = brush[m, n - 1] * -1;
+                        _write(ref brush, m, n, num);
+                        continue;
+                    }
+                    _write(ref brush, m, n, num *= -1);
+                }
+            }
+            return brush;
+        }
+        static void _write(ref int[,] brush, int m, int n, int value)
+        {
+            brush[m, n] = value;
+        }
+    }
     public static class Drawing
     {
-        sealed class Error
-        {
-            internal static int[,] GetArray(int width, int height, int size = 16)
-            {
-                int i = width / size;
-                int j = height / size;
-                int[,] brush = new int[i, j];
-                int num = -1;
-                for (int n = 0; n < brush.GetLength(1); n++)
-                {
-                    for (int m = 0; m < brush.GetLength(0); m++)
-                    {
-                        if (n > 0 && m == 0)
-                        {
-                            num = brush[m, n - 1] * -1;
-                            _write(ref brush, m, n, num);
-                            continue;
-                        }
-                        _write(ref brush, m, n, num *= -1);
-                    }
-                }
-                return brush;
-            }
-            static void _write(ref int[,] brush, int m, int n, int value)
-            {
-                brush[m, n] = value;
-            }
-        }
         public static Bitmap ErrorResult(int width, int height, int size = 16)
         {
             Bitmap result = new Bitmap(width, height);
