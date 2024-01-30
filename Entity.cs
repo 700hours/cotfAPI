@@ -47,7 +47,6 @@ namespace cotf
             set { position = new Vector2(value.X - Width / 2, value.Y - Height / 2); }
         }
         public Rectangle Hitbox => new Rectangle((int)position.X, (int)position.Y, Width, Height);
-        public Margin margin;
         public SizeF scale;
         private Size size;
         public virtual string TexturePrefix => "";
@@ -57,6 +56,7 @@ namespace cotf
         public virtual void Update() { }
         public virtual bool PreDraw(Graphics graphics) => true;
         public virtual void Draw(Graphics graphics) { }
+        public virtual void Draw(Graphics graphics, Lightmap[,] lightmap) { }
         public virtual void PostDraw(Graphics graphics) { }
         public virtual void PostFX() { }
         public void LampEffect(Lamp lamp)

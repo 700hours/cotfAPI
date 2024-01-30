@@ -13,7 +13,9 @@ using Rectangle = System.Drawing.Rectangle;
 using Color = System.Drawing.Color;
 using Point = System.Drawing.Point;
 using Matrix = System.Drawing.Drawing2D.Matrix;
+using PixelFormats = System.Windows.Media.PixelFormats;
 using System.Numerics;
+using FoundationR;
 
 namespace cotf.Base
 {
@@ -297,18 +299,18 @@ namespace cotf.Base
         {
             return Math.Max(((float)Helper.Distance(from, to) * -1f + range) / range, 0);
         }
-        public static bool SightLine(Vector2 from, Entity target, Size size, int step)
-        {
-            for (int n = 0; n < Helper.Distance(from, target.Center); n += step)
-            {
-                var v2 = from + Helper.AngleToSpeed(Helper.AngleTo(from, target.Center), n);
-                if (Lib.tile[(int)v2.X / size.Width, (int)v2.Y / size.Height].active)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+        //public static bool SightLine(Vector2 from, Entity target, Size size, int step)
+        //{
+        //    for (int n = 0; n < Helper.Distance(from, target.Center); n += step)
+        //    {
+        //        var v2 = from + Helper.AngleToSpeed(Helper.AngleTo(from, target.Center), n);
+        //        if (Lib.tile[(int)v2.X / size.Width, (int)v2.Y / size.Height].active)
+        //        {
+        //            return false;
+        //        }
+        //    }
+        //    return true;
+        //}
     }
     public static class Error
     {
@@ -442,22 +444,24 @@ namespace cotf.Base
             }
             return true;
         }
-        public static ThreadBitmap Lightpass0(List<Tile> brush, ThreadBitmap layer0, Vector2 topLeft, Lamp light, float range)
+        public static REW Lightpass0(List<Tile> brush, REW bitmap, Vector2 topLeft, Lamp light, float range)
         {
-            for (int i = 0; i < layer0.Width; i++)
+            REW layer0 = bitmap;
+            REW layer1 = REW.CreateEmpty(bitmap.Width, bitmap.Height, PixelFormats.Bgr32);
+            for (int i = 0; i < bitmap.Width; i++)
             {
-                for (int j = 0; j < layer0.Height; j++)
+                for (int j = 0; j < bitmap.Height; j++)
                 {
                     float distance = (float)Helper.Distance(topLeft + new Vector2(i, j), light.position);
                     float radius = Helper.NormalizedRadius(distance, range);
                     if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
                     {
-                        Color srcPixel = layer0.GetPixel(i, j);
-                        layer0.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
+                        Color srcPixel = layer0.GetPixel(i, j).color;
+                        layer1.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
                     }
                 }
             }
-            return layer0;
+            return layer1;
         }
         public static Bitmap Lightpass0(List<Tile> brush, Bitmap bitmap, Vector2 topLeft, Lamp light, float range)
         {

@@ -1,43 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 using cotf.Assets;
 using cotf.Base;
 using FoundationR;
-using REW = FoundationR.REW;
 using Color = System.Drawing.Color;
-using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
-using System.Windows.Media;
+
 
 namespace cotf
 {
-    public class Tile : Entity
+    public class Wall : Entity
     {
         public REW texture;
-        public bool occlude { get; private set;}
         private static bool init;
-        public static Tile Instance;
-        private Tile()
+        public static Wall Instance;
+        private Wall()
         {
         }
-        public Tile(int i, int j, float range, Size size, bool occlude)
+        public Wall(int i, int j, float range, Size size)
         {
-            Load();
-            name = $"tile {i}:{j}";
+            name = $"wall {i}:{j}";
             active = true;
             Width = size.Width;
             Height = size.Height;
             color = DefaultColor;
             alpha = 0f;
             this.range = range;
-            this.occlude = occlude;
-            texture = REW.Create(Width, Height, Color.GhostWhite, PixelFormats.Bgr32);
+            X = i * Width;
+            Y = j * Height;
+            texture = Asset<REW>.Load("Textures/tile");
         }
         public override string ToString()
         {
@@ -47,11 +47,11 @@ namespace cotf
         {
             if (!init)
             {
-                Instance = new Tile();
+                Instance = new Wall();
                 init = true;
             }
         }
-        public override string TexturePrefix => "tile";
+        public override string TexturePrefix => "wall";
         public override string Texture => $"{TexturePrefix}{(int)X / Width}{(int)Y / Height}";
         public override Color DefaultColor => Color.Gray;
         public override void Update()

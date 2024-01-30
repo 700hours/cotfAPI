@@ -16,15 +16,19 @@ namespace cotf
     public class Lamp : Entity
     {
         static bool init;
-        public static Lamp? Instance;
+        public static Lamp Instance;
         public int owner = 255;
         public bool staticLamp;
         private Lamp()
         {
         }
-        private Lamp(float range)
+        public Lamp(float x, float y, float range, Color color)
         {
+            Load();
             this.range = range;
+            this.X = x;
+            this.Y = y;
+            this.color = color;
             this.active = true;
         }
         public static void Load()
@@ -35,54 +39,11 @@ namespace cotf
                 init = true;
             }
         }
-        public override bool PreUpdate()
-        {
-            return onScreen =
-                position.X < Lib.OutputWidth &&
-                position.X >= 0 &&
-                position.Y < Lib.OutputHeight &&
-                position.Y >= 0;
-        }
         public static Color RandomLight()
         {
             int len = Enum.GetNames(typeof(KnownColor)).Length;
-            KnownColor c = (KnownColor)Enum.Parse(typeof(KnownColor), Enum.GetNames(typeof(KnownColor))[Lib.rand.Next(len)]);
+            KnownColor c = (KnownColor)Enum.Parse(typeof(KnownColor), Enum.GetNames(typeof(KnownColor))[new rand().Next(len)]);
             return Color.FromKnownColor(c);
-        }
-        public static int AddLamp(Lamp lamp)
-        {
-            int num = Lib.lamp.Length - 1;
-            for (int i = 0; i < Lib.lamp.Length; i++)
-            {
-                if (Lib.lamp[i] == null || !Lib.lamp[i].active)
-                {
-                    num = i;
-                    break;
-                }
-            }
-            Lib.lamp[num] = lamp;
-            Lib.lamp[num].whoAmI = num;
-            return num;
-        }
-        public static int NewLamp(float x, float y, float range, Color color, bool staticLamp = false, int owner = 255)
-        {
-            int num = Lib.lamp.Length - 1;
-            for (int i = 0; i < Lib.lamp.Length; i++)
-            {
-                if (Lib.lamp[i] == null || !Lib.lamp[i].active)
-                {
-                    num = i;
-                    break;
-                }
-            }
-            Lib.lamp[num] = new Lamp(range);
-            Lib.lamp[num].active = true;
-            Lib.lamp[num].position = new Vector2(x, y);
-            Lib.lamp[num].whoAmI = num;
-            Lib.lamp[num].owner = owner;
-            Lib.lamp[num].color = color;
-            Lib.lamp[num].staticLamp = staticLamp;
-            return num;
         }
     }
 }

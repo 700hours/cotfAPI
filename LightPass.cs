@@ -18,74 +18,56 @@ namespace cotf
 {
     public sealed class LightPass
     {
-        static List<Tile> NearbyTile(Lamp lamp)
+        static List<Tile> NearbyTile(Lamp lamp, Tile[,] tile)
         {
             List<Tile> brush = new List<Tile>();
-            for (int i = 0; i < Lib.tile.GetLength(0); i++)
+            for (int i = 0; i < tile.GetLength(0); i++)
             {
-                for (int j = 0; j < Lib.tile.GetLength(1); j++)
+                for (int j = 0; j < tile.GetLength(1); j++)
                 {
-                    if (Lib.tile[i, j] != null && Lib.tile[i, j].active)
+                    if (tile[i, j] != null && tile[i, j].active)
                     {
-                        if (Helper.Distance(Lib.tile[i, j].Center, lamp.position) < lamp.range)
+                        if (Helper.Distance(tile[i, j].Center, lamp.position) < lamp.range)
                         {
-                            brush.Add(Lib.tile[i, j]);
+                            brush.Add(tile[i, j]);
                         }
                     }
                 }
             }
             return brush;
         }
-        static List<Background> NearbyFloor(Lamp lamp)
+        static List<Wall> NearbyFloor(Lamp lamp, Wall[,] wall)
         {
-            List<Background> brush = new List<Background>();
-            for (int i = 0; i < Lib.background.GetLength(0); i++)
+            List<Wall> brush = new List<Wall>();
+            for (int i = 0; i < wall.GetLength(0); i++)
             {
-                for (int j = 0; j < Lib.background.GetLength(1); j++)
+                for (int j = 0; j < wall.GetLength(1); j++)
                 {
-                    if (Lib.background[i, j] != null && Lib.background[i, j].active)
+                    if (wall[i, j] != null && wall[i, j].active)
                     {
-                        if (Helper.Distance(Lib.background[i, j].Center, lamp.position) < lamp.range)
+                        if (Helper.Distance(wall[i, j].Center, lamp.position) < lamp.range)
                         {
-                            brush.Add(Lib.background[i, j]);
+                            brush.Add(wall[i, j]);
                         }
                     }
                 }
             }
             return brush;
         }
-        static ThreadBitmap[,] getThreadBmpArray()
+        public static void PreProcessing(Lamp[] lamp, Wall[,] wall, Tile[,] tile)
         {
-            var output = new ThreadBitmap[Lib.background.GetLength(0), Lib.background.GetLength(1)];
-            for (int i = 0; i < Lib.background.GetLength(0); i++)
+            for (int n = 0; n < lamp.Length; n++)
             {
-                for (int j = 0; j < Lib.background.GetLength(1); j++)
-                {
-                    output[i, j] = new ThreadBitmap((Bitmap)Lib.background[i, j].texture);
-                } 
-            }
-            return output;
-        }
-        static ThreadBitmap getThreadBmp(int i, int j)
-        {
-            return new ThreadBitmap((Bitmap)Lib.background[i, j].texture);
-        }
-        public static void PreProcessing()
-        {
-            for (int n = 0; n < Lib.lamp.Length; n++)
-            {
-                Lamp lamp = Lib.lamp[n];
-                if (lamp == null || !lamp.active || lamp.owner != 255)
+                Lamp _lamp = lamp[n];
+                if (_lamp == null || !_lamp.active || _lamp.owner != 255)
                     continue;
 
-                List<Tile> brush = NearbyTile(lamp);
+                List<Tile> brush = NearbyTile(_lamp, tile);
                 
-                int i = Lib.background.GetLength(0) - 1;
-                int j = Lib.background.GetLength(1) - 1;
+                int i = wall.GetLength(0) - 1;
+                int j = wall.GetLength(1) - 1;
                 int num = i + j;
 
-                //  DEBUG
-                lamp.range = 600f;
                 while (num-- > 0)
                 {
                     new Thread(() => 
@@ -94,27 +76,25 @@ namespace cotf
                         i--;
                         i = Math.Max(0, i);
                         j = Math.Max(0, j);
-                        if (Lib.background[i, j] == null || !Lib.background[i, j].active)
+                        if (wall[i, j] == null || !wall[i, j].active)
                         {
                         }
                         else
                         {
-                            if (Helper.Distance(Lib.background[i, j].Center, lamp.Center) <= lamp.range)
+                            if (Helper.Distance(wall[i, j].Center, _lamp.Center) <= _lamp.range)
                             {
                                 try
                                 { 
-                                    var tbmp = getThreadBmp(i, j);
-                                    lock (tbmp)
+                                    lock (wall[i, j].texture)
                                     {
-                                        var result = Drawing.Lightpass0(brush, tbmp, Lib.background[i, j].position, lamp, lamp.range);
-                                        Lib.background[i, j].texture = tbmp.GetBitmap();
+                                        wall[i, j].texture = Drawing.Lightpass0(brush, wall[i, j].texture, wall[i, j].position, _lamp, _lamp.range);
                                     }
                                 }
                                 catch 
                                 {
                                     if (i == 0)
                                     {
-                                        i = Lib.background.GetLength(0) - 1;
+                                        i = wall.GetLength(0) - 1;
                                         --j;
                                         goto NEXT; 
                                     }
@@ -125,20 +105,18 @@ namespace cotf
                         NEXT:
                         i = Math.Max(0, i);
                         j = Math.Max(0, j);
-                        if (Lib.background[i, j] == null || !Lib.background[i, j].active)
+                        if (wall[i, j] == null || !wall[i, j].active)
                         {
                         }
                         else 
                         {
-                            if (Helper.Distance(Lib.background[i, j].Center, lamp.Center) <= lamp.range)
+                            if (Helper.Distance(wall[i, j].Center, _lamp.Center) <= _lamp.range)
                             {
                                 try
                                 {
-                                    var tbmp = getThreadBmp(i, j);
-                                    lock (tbmp)
+                                    lock (wall[i, j].texture)
                                     {
-                                        var result = Drawing.Lightpass0(brush, tbmp, Lib.background[i, j].position, lamp, lamp.range);
-                                        Lib.background[i, j].texture = tbmp.GetBitmap();
+                                        wall[i, j].texture = Drawing.Lightpass0(brush, wall[i, j].texture, wall[i, j].position, _lamp, _lamp.range);
                                     }
                                 }
                                 catch 
@@ -148,17 +126,6 @@ namespace cotf
                         }
                     }).Start();
                 }
-            }
-        }
-        public static void PreProcessing(ref Image texture)
-        {
-            for (int n = 0; n < Lib.lamp.Length; n++)
-            {
-                Lamp lamp = Lib.lamp[n];
-                if (lamp == null || !lamp.active || lamp.owner != 255)
-                    continue;
-                List<Tile> brush = NearbyTile(lamp);
-                texture = Drawing.Lightpass0(brush, (Bitmap)texture, Vector2.Zero, lamp, lamp.range);
             }
         }
     }

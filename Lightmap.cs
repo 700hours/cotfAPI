@@ -14,26 +14,24 @@ namespace cotf.Base
 {
     public class Lightmap : Entity
     {
-        int i, j;
         static bool init;
-        public static Lightmap? Instance;
-        Entity? parent;
+        public static Lightmap Instance;
+        Entity parent;
         private Lightmap()
         {
         }
-        public Lightmap(int i, int j, float range, Size size, Margin margin)
+        public Lightmap(int i, int j, float range, Size size)
         {
-            name = "Lightmap";
+            Load();
+            name = $"lightmap {i}:{j}";
             active = true;
             Width = size.Width;
             Height = size.Height;
             color = DefaultColor;
-            position = new Vector2(i * Width, j * Height);
+            this.X = i * Width;
+            this.Y = j * Height;
             alpha = 0f;
             this.range = range;
-            this.margin = margin;
-            this.i = i;
-            this.j = j;
         }
         public static void Load()
         {
@@ -42,14 +40,6 @@ namespace cotf.Base
                 Instance = new Lightmap();
                 init = true;
             }
-        }
-        public override bool PreUpdate()
-        {
-            return onScreen =
-                position.X < Lib.OutputWidth &&
-                position.X >= 0 &&
-                position.Y < Lib.OutputHeight &&
-                position.Y >= 0;
         }
         public Color Update(Entity ent)
         {
