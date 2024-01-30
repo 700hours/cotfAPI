@@ -13,7 +13,6 @@ using Rectangle = System.Drawing.Rectangle;
 using Color = System.Drawing.Color;
 using Point = System.Drawing.Point;
 using Matrix = System.Drawing.Drawing2D.Matrix;
-using PixelFormats = System.Windows.Media.PixelFormats;
 using System.Numerics;
 using FoundationR;
 
@@ -444,24 +443,22 @@ namespace cotf.Base
             }
             return true;
         }
-        public static REW Lightpass0(List<Tile> brush, REW bitmap, Vector2 topLeft, Lamp light, float range)
+        public static REW Lightpass0(List<Tile> brush, REW layer0, Vector2 topLeft, Lamp light, float range)
         {
-            REW layer0 = bitmap;
-            REW layer1 = REW.CreateEmpty(bitmap.Width, bitmap.Height, PixelFormats.Bgr32);
-            for (int i = 0; i < bitmap.Width; i++)
+            for (int i = 0; i < layer0.Width; i++)
             {
-                for (int j = 0; j < bitmap.Height; j++)
+                for (int j = 0; j < layer0.Height; j++)
                 {
                     float distance = (float)Helper.Distance(topLeft + new Vector2(i, j), light.position);
                     float radius = Helper.NormalizedRadius(distance, range);
                     if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
                     {
                         Color srcPixel = layer0.GetPixel(i, j).color;
-                        layer1.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
+                        layer0.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
                     }
                 }
             }
-            return layer1;
+            return layer0;
         }
         public static Bitmap Lightpass0(List<Tile> brush, Bitmap bitmap, Vector2 topLeft, Lamp light, float range)
         {

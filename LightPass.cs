@@ -68,14 +68,16 @@ namespace cotf
                 int j = wall.GetLength(1) - 1;
                 int num = i + j;
 
+                //  DEBUG
+                _lamp.range = 600f;
                 while (num-- > 0)
                 {
                     new Thread(() => 
                     {
                         BEGIN:
                         i--;
-                        i = Math.Max(0, i);
-                        j = Math.Max(0, j);
+                        i = Math.Min(Math.Max(0, i), wall.GetLength(0) - 1);
+                        j = Math.Min(Math.Max(0, j), wall.GetLength(0) - 1);
                         if (wall[i, j] == null || !wall[i, j].active)
                         {
                         }
@@ -103,8 +105,8 @@ namespace cotf
                             }
                         }
                         NEXT:
-                        i = Math.Max(0, i);
-                        j = Math.Max(0, j);
+                        i = Math.Min(Math.Max(0, i), wall.GetLength(0) - 1);
+                        j = Math.Min(Math.Max(0, j), wall.GetLength(0) - 1);
                         if (wall[i, j] == null || !wall[i, j].active)
                         {
                         }
