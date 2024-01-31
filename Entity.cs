@@ -74,7 +74,7 @@ namespace cotf
             alpha = 0f;
             alpha += Math.Max(0, num);
             alpha = Math.Min(alpha, 1f);
-            color = Ext.AdditiveV2(color, lamp.color, num / 2f);
+            //color = Ext.AdditiveV2(color, lamp.color, num / 2f);
         }
     }
     sealed class OutOfBoundsException : Exception

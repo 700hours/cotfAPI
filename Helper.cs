@@ -48,6 +48,16 @@ namespace cotf.Base
         {
             return new float[] { v2.X, v2.Y }.Min();
         }
+        public static Color Multiply(this Color color, Color c)
+        {
+            return Color.FromArgb
+            (
+                (int)(color.A * c.A / 255f),
+                (int)(color.R * c.R / 255f),
+                (int)(color.G * c.G / 255f),
+                (int)(color.B * c.B / 255f)
+            );
+        }
         public static Color FromFloat(float a, float r, float g, float b)
         {
             int A = (int)Math.Min(255f * a, 255),
@@ -58,9 +68,9 @@ namespace cotf.Base
         }
         public static Color Transparency(this Color one, float alpha)
         {
-            int a = (int)(255f * alpha), 
-                r = 0, 
-                g = 0, 
+            int a = (int)(255f * alpha),
+                r = 0,
+                g = 0,
                 b = 0;
             r = one.R;
             g = one.G;
@@ -98,7 +108,7 @@ namespace cotf.Base
             for (int i = 0; i < array.GetLength(0); i++)
             {
                 for (int j = 0; j < array.GetLength(1); j++)
-                { 
+                {
                     r += array[i, j].R;
                     g += array[i, j].G;
                     b += array[i, j].B;
@@ -172,7 +182,7 @@ namespace cotf.Base
         public static Color NonAlpha(this Color color)
         {
             int a = 255;
-            int r = color.R; 
+            int r = color.R;
             int g = color.G;
             int b = color.B;
             return Color.FromArgb(a, r, g, b);
@@ -445,6 +455,9 @@ namespace cotf.Base
         }
         public static REW Lightpass0(List<Tile> brush, REW layer0, Vector2 topLeft, Lamp light, float range)
         {
+            byte[] pixels = layer0.GetPixels();
+            REW layer1 = REW.Create(layer0.Width, layer0.Height, in pixels, layer0.BitsPerPixel);
+            pixels = null;
             for (int i = 0; i < layer0.Width; i++)
             {
                 for (int j = 0; j < layer0.Height; j++)
@@ -453,12 +466,12 @@ namespace cotf.Base
                     float radius = Helper.NormalizedRadius(distance, range);
                     if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
                     {
-                        Color srcPixel = layer0.GetPixel(i, j).color;
-                        layer0.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
+                        Color srcPixel = layer0.GetPixel(i, j).color;      //, radius
+                        layer1.SetPixel(i, j, srcPixel.Multiply(light.color));
                     }
                 }
             }
-            return layer0;
+            return layer1;
         }
         public static Bitmap Lightpass0(List<Tile> brush, Bitmap bitmap, Vector2 topLeft, Lamp light, float range)
         {
@@ -472,8 +485,8 @@ namespace cotf.Base
                     float radius = Helper.NormalizedRadius(distance, range);
                     if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
                     {
-                        Color srcPixel = layer0.GetPixel(i, j);
-                        layer1.SetPixel(i, j, Ext.Multiply(srcPixel, light.color, radius));
+                        Color srcPixel = layer0.GetPixel(i, j);          //, radius));
+                        layer1.SetPixel(i, j, srcPixel.Multiply(light.color));
                     }
                 }
             }
@@ -484,7 +497,7 @@ namespace cotf.Base
         public static void TextureLighting(Image texture, Rectangle hitbox, Entity ent, float gamma, Graphics graphics)
         {
             using (Bitmap bitmap = new Bitmap(ent.Width, ent.Height))
-            { 
+            {
                 using (Graphics gfx = Graphics.FromImage(bitmap))
                 {
                     gfx.DrawImage(texture, new Rectangle(0, 0, ent.Width, ent.Height));

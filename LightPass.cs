@@ -25,7 +25,7 @@ namespace cotf
             {
                 for (int j = 0; j < tile.GetLength(1); j++)
                 {
-                    if (tile[i, j] != null && tile[i, j].active)
+                    if (tile[i, j] != null && tile[i, j].active && tile[i, j].occlude)
                     {
                         if (Helper.Distance(tile[i, j].Center, lamp.position) < lamp.range)
                         {
@@ -64,69 +64,20 @@ namespace cotf
 
                 List<Tile> brush = NearbyTile(_lamp, tile);
                 
-                int i = wall.GetLength(0) - 1;
-                int j = wall.GetLength(1) - 1;
-                int num = i + j;
-
                 //  DEBUG
-                _lamp.range = 600f;
-                while (num-- > 0)
+                _lamp.range = 400f;
+                for (int i = 0; i < wall.GetLength(0); i++)
                 {
-                    new Thread(() => 
+                    for (int j = 0; j < wall.GetLength(1); j++)
                     {
-                        BEGIN:
-                        i--;
-                        i = Math.Min(Math.Max(0, i), wall.GetLength(0) - 1);
-                        j = Math.Min(Math.Max(0, j), wall.GetLength(0) - 1);
-                        if (wall[i, j] == null || !wall[i, j].active)
-                        {
-                        }
-                        else
+                        if (wall[i, j] != null && wall[i, j].active)
                         {
                             if (Helper.Distance(wall[i, j].Center, _lamp.Center) <= _lamp.range)
                             {
-                                try
-                                { 
-                                    lock (wall[i, j].texture)
-                                    {
-                                        wall[i, j].texture = Drawing.Lightpass0(brush, wall[i, j].texture, wall[i, j].position, _lamp, _lamp.range);
-                                    }
-                                }
-                                catch 
-                                {
-                                    if (i == 0)
-                                    {
-                                        i = wall.GetLength(0) - 1;
-                                        --j;
-                                        goto NEXT; 
-                                    }
-                                    else goto BEGIN;
-                                }
+                                wall[i, j].texture = Drawing.Lightpass0(brush, wall[i, j].texture, wall[i, j].position, _lamp, _lamp.range);
                             }
                         }
-                        NEXT:
-                        i = Math.Min(Math.Max(0, i), wall.GetLength(0) - 1);
-                        j = Math.Min(Math.Max(0, j), wall.GetLength(0) - 1);
-                        if (wall[i, j] == null || !wall[i, j].active)
-                        {
-                        }
-                        else 
-                        {
-                            if (Helper.Distance(wall[i, j].Center, _lamp.Center) <= _lamp.range)
-                            {
-                                try
-                                {
-                                    lock (wall[i, j].texture)
-                                    {
-                                        wall[i, j].texture = Drawing.Lightpass0(brush, wall[i, j].texture, wall[i, j].position, _lamp, _lamp.range);
-                                    }
-                                }
-                                catch 
-                                { 
-                                }
-                            }
-                        }
-                    }).Start();
+                    }
                 }
             }
         }
