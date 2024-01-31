@@ -9,14 +9,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using cotf.Assets;
-using cotf.Base;
+using cotfAPI.Assets;
+using cotfAPI.Base;
 using FoundationR;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 
 
-namespace cotf
+namespace cotfAPI
 {
     public class Wall : Entity
     {

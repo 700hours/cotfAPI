@@ -6,8 +6,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using cotf.Assets;
-using cotf.Base;
+using cotfAPI.Assets;
+using cotfAPI.Base;
 using FoundationR;
 using REW = FoundationR.REW;
 using Color = System.Drawing.Color;
@@ -15,7 +15,7 @@ using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 using System.Windows.Media;
 
-namespace cotf
+namespace cotfAPI
 {
     public class Tile : Entity
     {

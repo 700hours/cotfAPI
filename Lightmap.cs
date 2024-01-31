@@ -6,11 +6,11 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using cotf.Base;
+using cotfAPI.Base;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 
-namespace cotf.Base
+namespace cotfAPI.Base
 {
     public class Lightmap : Entity
     {

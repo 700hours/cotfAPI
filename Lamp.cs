@@ -7,11 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using cotf.Base;
+using cotfAPI.Base;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using cotfAPI;
 
-namespace cotf
+namespace cotfAPI
 {
     public class Lamp : Entity
     {

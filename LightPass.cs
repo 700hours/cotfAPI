@@ -7,14 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using cotf.Base;
+using cotfAPI.Base;
 using System.Threading;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using System.Numerics;
 using System.ComponentModel;
 
-namespace cotf
+namespace cotfAPI
 {
     public sealed class LightPass
     {

@@ -4,8 +4,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
-using cotf.Assets;
-using cotf.Base;
+using cotfAPI.Assets;
+using cotfAPI.Base;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Linq;
@@ -15,8 +15,9 @@ using Point = System.Drawing.Point;
 using Matrix = System.Drawing.Drawing2D.Matrix;
 using System.Numerics;
 using FoundationR;
+using System.ComponentModel;
 
-namespace cotf.Base
+namespace cotfAPI.Base
 {
     public static class Ext
     {
@@ -466,8 +467,8 @@ namespace cotf.Base
                     float radius = Helper.NormalizedRadius(distance, range);
                     if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
                     {
-                        Color srcPixel = layer0.GetPixel(i, j).color;      //, radius
-                        layer1.SetPixel(i, j, srcPixel.Multiply(light.color));
+                        Color srcColor = layer0.GetPixel(i, j).color;
+                        layer1.SetPixel(i, j, srcColor.Multiply(light.color, radius));
                     }
                 }
             }
@@ -486,7 +487,7 @@ namespace cotf.Base
                     if (radius > 0f && dynamic(brush, new Vector2(i, j), topLeft, light, range))
                     {
                         Color srcPixel = layer0.GetPixel(i, j);          //, radius));
-                        layer1.SetPixel(i, j, srcPixel.Multiply(light.color));
+                        layer1.SetPixel(i, j, srcPixel.Multiply(light.color, radius));
                     }
                 }
             }
