@@ -36,18 +36,18 @@ namespace cotfAPI.Assets
 		}
 		public static T Load(string name)
 		{
-			return (T)new FileStream(Path.Combine(Directory.GetCurrentDirectory(), name + ".rew"), FileMode.Open, FileAccess.Read).ReadREW();
+			return (T)new FileStream(Path.Combine(Directory.GetCurrentDirectory(), "Textures", name + ".rew"), FileMode.Open, FileAccess.Read).ReadREW();
 		}
 		public static T Request(string name)
 		{
-			Bitmap map = (Bitmap)Bitmap.FromFile(name);
-			T t = (T)REW.Extract(map, (short)map.PixelFormat.BytesPerPixel());
+            Bitmap map = (Bitmap)Bitmap.FromFile(Path.Combine(Directory.GetCurrentDirectory(), "Textures", name));
+            T t = (T)REW.Extract(map, (short)map.PixelFormat.BytesPerPixel());
 			map.Dispose();
 			return t;
 		}
 		public static T Request(string name, string extension)
 		{
-			Bitmap map = (Bitmap)Bitmap.FromFile(name + extension);
+			Bitmap map = (Bitmap)Bitmap.FromFile(Path.Combine(Directory.GetCurrentDirectory(), "Textures", name + extension));
 			T t = (T)REW.Extract(map, (short)map.PixelFormat.BytesPerPixel());
 			map.Dispose();
 			return t;

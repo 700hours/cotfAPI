@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <Reference Include="FoundationR">
-      <HintPath>..\FoundationR\bin\Debug\net48\FoundationR.exe</HintPath>
+      <HintPath>..\FoundationR\bin\Release\net48\FoundationR.exe</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System.Drawing">
